@@ -27,7 +27,7 @@
             box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
             padding: 40px;
             width: 100%;
-            max-width: 600px;
+            max-width: 800px;
             text-align: center;
         }
         
@@ -149,6 +149,11 @@
             color: #721c24;
         }
         
+        .status.warning {
+            background: #fff3cd;
+            color: #856404;
+        }
+        
         .example-text {
             background: #f8f9fa;
             padding: 20px;
@@ -165,6 +170,65 @@
         .example-text p {
             color: #666;
             line-height: 1.6;
+        }
+        
+        .log-container {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 30px;
+            text-align: left;
+        }
+        
+        .log-container h3 {
+            color: #555;
+            margin-bottom: 15px;
+        }
+        
+        .log-content {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 15px;
+            border-radius: 8px;
+            height: 200px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+        }
+        
+        .log-entry {
+            margin-bottom: 8px;
+        }
+        
+        .log-timestamp {
+            color: #68d391;
+        }
+        
+        .log-info {
+            color: #63b3ed;
+        }
+        
+        .log-warning {
+            color: #f6e05e;
+        }
+        
+        .log-error {
+            color: #fc8181;
+        }
+        
+        .clear-log-btn {
+            background: #e53e3e;
+            color: white;
+            padding: 8px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 10px;
+            font-size: 0.9rem;
+        }
+        
+        .clear-log-btn:hover {
+            background: #c53030;
         }
         
         @media (max-width: 600px) {
@@ -218,6 +282,12 @@
             <h3>ตัวอย่างการใช้งาน:</h3>
             <p>ระบบจะใช้ Google Translate เพื่ออ่านออกเสียงข้อความที่คุณป้อน โดยมีความเร็วในการอ่านที่ 1.35 เท่าของความเร็วปกติ ซึ่งเร็วกว่าปกติเล็กน้อยเพื่อให้การฟังมีประสิทธิภาพมากขึ้น</p>
         </div>
+        
+        <div class="log-container">
+            <h3>ระบบตรวจสอบการทำงาน (Log)</h3>
+            <div id="logContent" class="log-content"></div>
+            <button id="clearLogBtn" class="clear-log-btn">ล้าง Log</button>
+        </div>
     </div>
 
     <script>
@@ -227,16 +297,35 @@
             const speakBtn = document.getElementById('speakBtn');
             const stopBtn = document.getElementById('stopBtn');
             const statusDiv = document.getElementById('status');
+            const logContent = document.getElementById('logContent');
+            const clearLogBtn = document.getElementById('clearLogBtn');
             
             let audio = null;
             let isPlaying = false;
             
+            // ฟังก์ชันเพิ่ม log
+            function addLog(message, type = 'info') {
+                const timestamp = new Date().toLocaleTimeString();
+                const logEntry = document.createElement('div');
+                logEntry.className = 'log-entry';
+                logEntry.innerHTML = `<span class="log-timestamp">[${timestamp}] ${message}`;
+                logContent.appendChild(logEntry);
+                logContent.scrollTop = logContent.scrollHeight;
+            }
+            
+            // ฟังก์ชันล้าง log
+            function clearLog() {
+                logContent.innerHTML = '';
+                addLog('Log ถูกล้างเรียบร้อยแล้ว', 'info');
+            }
+            
             // ฟังก์ชันสร้าง URL สำหรับ Google Translate TTS
             function generateTTSUrl(text, lang) {
-                // แทนที่ space ด้วย + เพื่อให้ URL ทำงานได้ดี
+                addLog(`กำลังสร้าง URL สำหรับ TTS - ภาษา: ${lang}`, 'info');
                 const encodedText = encodeURIComponent(text);
-                // ความเร็ว 1.35 เท่า (ปกติคือ 1.0)
-                return `https://translate.google.com/translate_tts?ie=UTF-8&q=${encodedText}&tl=${lang}&client=tw-ob&ttsspeed=1.35`;
+                const url = `https://translate.google.com/translate_tts?ie=UTF-8&q=${encodedText}&tl=${lang}&client=tw-ob&ttsspeed=1.35`;
+                addLog(`URL ที่สร้าง: ${url.substring(0, 100)}...`, 'info');
+                return url;
             }
             
             // ฟังก์ชันแสดงสถานะ
@@ -251,29 +340,66 @@
                 }, 3000);
             }
             
+            // ฟังก์ชันตรวจสอบการเชื่อมต่อ
+            function checkConnectivity() {
+                return new Promise((resolve) => {
+                    const img = new Image();
+                    const timeout = setTimeout(() => {
+                        resolve(false);
+                    }, 5000);
+                    
+                    img.onload = () => {
+                        clearTimeout(timeout);
+                        resolve(true);
+                    };
+                    
+                    img.onerror = () => {
+                        clearTimeout(timeout);
+                        resolve(false);
+                    };
+                    
+                    img.src = 'https://www.google.com/favicon.ico';
+                });
+            }
+            
             // ฟังก์ชันอ่านออกเสียง
-            function speakText() {
+            async function speakText() {
                 const text = textArea.value.trim();
                 const lang = languageSelect.value;
                 
+                addLog(`เริ่มกระบวนการอ่านออกเสียง - ข้อความ: "${text.substring(0, 50)}..."`, 'info');
+                
                 if (!text) {
+                    addLog('ข้อผิดพลาด: ไม่มีข้อความให้อ่านออกเสียง', 'error');
                     showStatus('กรุณาใส่ข้อความที่ต้องการอ่านออกเสียง', 'error');
                     return;
+                }
+                
+                // ตรวจสอบการเชื่อมต่อ
+                addLog('กำลังตรวจสอบการเชื่อมต่อกับ Google...', 'info');
+                const isConnected = await checkConnectivity();
+                
+                if (!isConnected) {
+                    addLog('คำเตือน: ไม่สามารถเชื่อมต่อกับ Google ได้ อาจเป็นเพราะ CORS หรือการบล็อกจากเบราว์เซอร์', 'warning');
+                    showStatus('ไม่สามารถเชื่อมต่อกับ Google ได้ ระบบอาจไม่ทำงานบน GitHub Pages', 'warning');
                 }
                 
                 // หยุดเสียงเก่าถ้ามี
                 if (audio) {
                     audio.pause();
+                    addLog('หยุดเสียงเก่า', 'info');
                 }
                 
                 try {
                     const ttsUrl = generateTTSUrl(text, lang);
+                    addLog('กำลังสร้าง Audio object...', 'info');
                     audio = new Audio(ttsUrl);
                     
                     audio.onplay = function() {
                         isPlaying = true;
                         speakBtn.disabled = true;
                         stopBtn.disabled = false;
+                        addLog('เริ่มเล่นเสียง', 'info');
                         showStatus('กำลังอ่านออกเสียง...', 'success');
                     };
                     
@@ -281,20 +407,34 @@
                         isPlaying = false;
                         speakBtn.disabled = false;
                         stopBtn.disabled = true;
+                        addLog('เล่นเสียงเสร็จสิ้น', 'info');
                     };
                     
-                    audio.onerror = function() {
+                    audio.onerror = function(e) {
                         isPlaying = false;
                         speakBtn.disabled = false;
                         stopBtn.disabled = true;
+                        addLog(`ข้อผิดพลาดในการเล่นเสียง: ${e.target.error?.code || 'ไม่ทราบสาเหตุ'}`, 'error');
                         showStatus('ไม่สามารถอ่านออกเสียงได้ กรุณาลองใหม่อีกครั้ง', 'error');
+                        
+                        // ตรวจสอบข้อผิดพลาดเฉพาะ
+                        if (e.target.error?.code === 4) {
+                            addLog('คำเตือน: อาจเป็นปัญหา CORS หรือการบล็อกจากเบราว์เซอร์ ระบบอาจไม่ทำงานบน GitHub Pages', 'warning');
+                        }
                     };
                     
-                    audio.play();
+                    addLog('กำลังเริ่มเล่นเสียง...', 'info');
+                    await audio.play();
                 } catch (error) {
+                    addLog(`ข้อผิดพลาด: ${error.message}`, 'error');
                     showStatus('เกิดข้อผิดพลาดในการอ่านออกเสียง', 'error');
                     speakBtn.disabled = false;
                     stopBtn.disabled = true;
+                    
+                    // ตรวจสอบข้อผิดพลาด CORS
+                    if (error.name === 'NotAllowedError') {
+                        addLog('คำเตือน: อาจเป็นปัญหาการอนุญาตหรือ CORS ระบบอาจไม่ทำงานบน GitHub Pages', 'warning');
+                    }
                 }
             }
             
@@ -303,6 +443,7 @@
                 if (audio) {
                     audio.pause();
                     audio.currentTime = 0;
+                    addLog('หยุดการเล่นเสียง', 'info');
                 }
                 isPlaying = false;
                 speakBtn.disabled = false;
@@ -313,13 +454,19 @@
             // Event listeners
             speakBtn.addEventListener('click', speakText);
             stopBtn.addEventListener('click', stopText);
+            clearLogBtn.addEventListener('click', clearLog);
             
             // หยุดเสียงเมื่อหน้าเว็บถูกปิด
             window.addEventListener('beforeunload', function() {
                 if (audio) {
                     audio.pause();
+                    addLog('หยุดเสียงก่อนปิดหน้าเว็บ', 'info');
                 }
             });
+            
+            // เริ่มต้น log
+            addLog('ระบบเริ่มทำงาน', 'info');
+            addLog('คำเตือน: ระบบ Google Translate TTS อาจไม่ทำงานบน GitHub Pages หรือบางเบราว์เซอร์เนื่องจาก CORS policy', 'warning');
         });
     </script>
 </body>
