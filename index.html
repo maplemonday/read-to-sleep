@@ -3,476 +3,180 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Read-to-Sleep</title>
+    <title>Text to Speech ด้วย Google Translate</title>
     <style>
-        :root {
-            --bg-dark: #121212;
-            --bg-card: #1e1e1e;
-            --text-primary: #ffffff;
-            --text-secondary: #b0b0b0;
-            --accent: #bb86fc;
-            --accent-hover: #9a67ea;
-            --success: #03dac6;
-            --warning: #cf6679;
-            --progress-bg: #333333;
-            --progress-fill: #bb86fc;
-        }
-
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
-
+        
         body {
-            background-color: var(--bg-dark);
-            color: var(--text-primary);
-            line-height: 1.6;
-            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
-        }
-
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-        }
-
-        header {
-            text-align: center;
-            margin-bottom: 30px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
             padding: 20px;
         }
-
-        h1 {
-            font-size: 2.5rem;
-            margin-bottom: 10px;
-            background: linear-gradient(45deg, var(--accent), var(--success));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
+        
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            padding: 40px;
+            width: 100%;
+            max-width: 600px;
+            text-align: center;
         }
-
+        
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 2.5rem;
+        }
+        
         .subtitle {
-            color: var(--text-secondary);
+            color: #666;
+            margin-bottom: 30px;
             font-size: 1.1rem;
         }
-
-        .block {
-            background: var(--bg-card);
-            border-radius: 12px;
-            padding: 20px;
-            margin-bottom: 20px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        
+        .input-group {
+            margin-bottom: 30px;
+            text-align: left;
         }
-
+        
+        label {
+            display: block;
+            margin-bottom: 10px;
+            color: #555;
+            font-weight: 500;
+        }
+        
         textarea {
             width: 100%;
-            background: #2d2d2d;
-            border: 1px solid #444;
-            border-radius: 8px;
-            color: var(--text-primary);
+            height: 150px;
             padding: 15px;
-            font-size: 16px;
+            border: 2px solid #e1e5e9;
+            border-radius: 10px;
+            font-size: 1rem;
             resize: vertical;
-            min-height: 150px;
+            transition: border-color 0.3s;
         }
-
+        
         textarea:focus {
             outline: none;
-            border-color: var(--accent);
+            border-color: #667eea;
         }
-
-        .ai-block {
+        
+        .controls {
             display: flex;
-            gap: 10px;
-            align-items: center;
+            gap: 15px;
+            margin-bottom: 30px;
             flex-wrap: wrap;
         }
-
-        .ai-input-container {
-            position: relative;
+        
+        select, button {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        select {
             flex: 1;
-            min-width: 150px;
+            background: #f8f9fa;
+            border: 2px solid #e1e5e9;
+            color: #333;
         }
-
-        .ai-input {
-            width: 100%;
-            background: #2d2d2d;
-            border: 1px solid #444;
-            border-radius: 8px;
-            color: var(--text-primary);
-            padding: 8px 30px 8px 8px;
-            font-size: 13px;
-        }
-
-        .ai-input:focus {
-            outline: none;
-            border-color: var(--accent);
-        }
-
-        .api-status {
-            position: absolute;
-            right: 8px;
-            top: 50%;
-            transform: translateY(-50%);
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-            background-color: #666;
-        }
-
-        .api-status.ok {
-            background-color: var(--success);
-        }
-
-        .ai-model-select {
-            background: #2d2d2d;
-            border: 1px solid #444;
-            border-radius: 8px;
-            color: var(--text-primary);
-            padding: 8px;
-            font-size: 13px;
-            min-width: 150px;
-        }
-
-        .ai-model-select:focus {
-            outline: none;
-            border-color: var(--accent);
-        }
-
-        .ai-model-select:disabled {
-            background: #3d3d3d;
-            color: var(--text-secondary);
-        }
-
-        .ai-buttons {
-            display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
-        }
-
-        .ai-button {
-            background: #2d2d2d;
-            border: 1px solid #444;
-            color: var(--text-primary);
-            padding: 8px 12px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 13px;
-            transition: all 0.2s ease;
-            min-width: 80px;
-            text-align: center;
-        }
-
-        .ai-button:hover {
-            background: #3d3d3d;
-            border-color: var(--accent);
-        }
-
-        .ai-button.active {
-            background: var(--accent);
-            border-color: var(--accent);
-        }
-
-        .ai-button:disabled {
-            background: #666;
-            cursor: not-allowed;
-        }
-
-        .controls-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .control-buttons {
-            display: flex;
-            gap: 8px;
-        }
-
-        .speed-controls {
-            display: flex;
-            gap: 8px;
-        }
-
+        
         button {
-            background: #2d2d2d;
-            border: 1px solid #444;
-            color: var(--text-primary);
-            padding: 10px 15px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 14px;
-            transition: all 0.2s ease;
-            min-width: 50px;
-            text-align: center;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            background: #667eea;
+            color: white;
+            font-weight: 600;
+            min-width: 120px;
         }
-
+        
         button:hover {
-            background: #3d3d3d;
-            border-color: var(--accent);
+            background: #5a6fd8;
+            transform: translateY(-2px);
         }
-
-        button.active {
-            background: var(--accent);
-            border-color: var(--accent);
+        
+        button:active {
+            transform: translateY(0);
         }
-
-        button.primary {
-            background: var(--accent);
-            border-color: var(--accent);
+        
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
         }
-
-        button.primary:hover {
-            background: var(--accent-hover);
-        }
-
-        .progress-info {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 15px;
-        }
-
-        .progress-text {
-            font-size: 14px;
-            color: var(--text-secondary);
-        }
-
-        .progress-center {
-            font-size: 14px;
-            color: var(--text-secondary);
-            text-align: center;
-        }
-
-        .progress-bar {
-            width: 100%;
-            height: 8px;
-            background: var(--progress-bg);
-            border-radius: 4px;
-            overflow: hidden;
-        }
-
-        .progress-fill {
-            height: 100%;
-            background: var(--progress-fill);
-            width: 0%;
-            transition: width 0.3s ease;
-        }
-
-        .current-chunk {
-            min-height: 120px;
+        
+        .speed-control {
             display: flex;
             align-items: center;
-            justify-content: center;
-            text-align: center;
-            font-size: 18px;
-            padding: 20px;
-            background: #252525;
-            border-radius: 8px;
-            border: 1px solid #333;
-        }
-
-        .log-area {
-            background: #252525;
-            border-radius: 8px;
-            padding: 15px;
-            height: 150px;
-            overflow-y: auto;
-            font-family: monospace;
-            font-size: 14px;
-            border: 1px solid #333;
-        }
-
-        .log-entry {
-            margin-bottom: 5px;
-            padding: 3px 0;
-            border-bottom: 1px solid #333;
-        }
-
-        .log-timestamp {
-            color: var(--accent);
-            margin-right: 10px;
-        }
-
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.8);
-            z-index: 1000;
-            align-items: center;
+            gap: 15px;
+            margin-bottom: 30px;
             justify-content: center;
         }
-
-        .modal-content {
-            background: var(--bg-card);
-            border-radius: 12px;
-            width: 90%;
-            max-width: 600px;
-            padding: 25px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-            position: relative;
-        }
-
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-
-        .modal-title {
-            font-size: 1.5rem;
+        
+        .speed-value {
+            background: #667eea;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
             font-weight: 600;
         }
-
-        .close-modal {
-            background: none;
-            border: none;
-            color: var(--text-primary);
-            font-size: 24px;
-            cursor: pointer;
-            width: 30px;
-            height: 30px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 50%;
-            transition: background-color 0.2s;
-        }
-
-        .close-modal:hover {
-            background-color: #333;
-        }
-
-        .word-list {
-            height: 120px;
-            margin-bottom: 15px;
-        }
-
-        .preview-row {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 15px;
-        }
-
-        .preview-text {
-            flex: 1;
-            background: #2d2d2d;
-            border: 1px solid #444;
-            border-radius: 8px;
-            color: var(--text-primary);
-            padding: 10px;
-            font-size: 14px;
-        }
-
-        .preview-text:focus {
-            outline: none;
-            border-color: var(--accent);
-        }
-
-        .actions-row {
-            display: flex;
-            justify-content: space-between;
-            gap: 10px;
-        }
-
-        .action-buttons {
-            display: flex;
-            gap: 8px;
-        }
-
-        .tabs {
-            display: flex;
-            margin-bottom: 15px;
-            border-bottom: 1px solid #444;
-        }
-
-        .tab {
-            padding: 10px 15px;
-            cursor: pointer;
-            background: #2d2d2d;
-            border: 1px solid #444;
-            border-bottom: none;
-            border-radius: 8px 8px 0 0;
-            margin-right: 5px;
-        }
-
-        .tab.active {
-            background: var(--accent);
-            border-color: var(--accent);
-        }
-
-        .tab-content {
-            display: none;
-        }
-
-        .tab-content.active {
-            display: block;
-        }
-
-        .prompt-textarea {
-            width: 100%;
-            height: 200px;
-            background: #2d2d2d;
-            border: 1px solid #444;
-            border-radius: 8px;
-            color: var(--text-primary);
+        
+        .status {
             padding: 15px;
-            font-size: 14px;
-            resize: vertical;
+            border-radius: 8px;
+            margin-top: 20px;
+            font-weight: 500;
         }
-
-        .loading-indicator {
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            border: 3px solid #f3f3f3;
-            border-top: 3px solid var(--accent);
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin-left: 10px;
-            vertical-align: middle;
+        
+        .status.success {
+            background: #d4edda;
+            color: #155724;
         }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+        
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
         }
-
+        
+        .example-text {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 30px;
+            text-align: left;
+        }
+        
+        .example-text h3 {
+            color: #555;
+            margin-bottom: 15px;
+        }
+        
+        .example-text p {
+            color: #666;
+            line-height: 1.6;
+        }
+        
         @media (max-width: 600px) {
-            .controls-row {
+            .container {
+                padding: 20px;
+            }
+            
+            .controls {
                 flex-direction: column;
             }
             
-            .control-buttons, .speed-controls {
-                width: 100%;
-                justify-content: center;
-            }
-            
-            .actions-row {
-                flex-direction: column;
-            }
-            
-            .action-buttons {
-                width: 100%;
-                justify-content: center;
-            }
-            
-            .ai-block {
-                flex-direction: column;
-            }
-            
-            .ai-input-container, .ai-model-select {
+            button, select {
                 width: 100%;
             }
         }
@@ -480,1132 +184,142 @@
 </head>
 <body>
     <div class="container">
-        <header>
-            <h1>Read-to-Sleep</h1>
-            <p class="subtitle">Text-to-Speech สำหรับนิยายจีนด้วยเสียงผู้หญิงไทย</p>
-        </header>
-
-        <div class="block">
-            <textarea id="textInput" placeholder="วางข้อความนิยายของคุณที่นี่..."></textarea>
+        <h1>Text to Speech</h1>
+        <p class="subtitle">แปลงข้อความเป็นเสียงพูดด้วย Google Translate</p>
+        
+        <div class="input-group">
+            <label for="text">ใส่ข้อความที่ต้องการอ่านออกเสียง:</label>
+            <textarea id="text" placeholder="พิมพ์ข้อความที่นี่...">สวัสดีครับ นี่คือตัวอย่างการอ่านออกเสียงด้วยความเร็ว 1.35 เท่าของความเร็วปกติ</textarea>
         </div>
-
-        <div class="block">
-            <div class="ai-block">
-                <div class="ai-input-container">
-                    <input type="password" class="ai-input" id="apiKey" placeholder="API Key">
-                    <div class="api-status" id="apiStatus"></div>
-                </div>
-                <select class="ai-model-select" id="modelSelect">
-                    <option value="gemini-2.5-flash">gemini-2.5-flash</option>
-                    <option value="gemini-2.0-flash">gemini-2.0-flash</option>
-                    <option value="gemini-1.5-flash">gemini-1.5-flash</option>
-                    <option value="gemini-1.5-pro">gemini-1.5-pro</option>
-                </select>
-                <div class="ai-buttons">
-                    <button class="ai-button" id="aiProcessBtn">จัดความ</button>
-                    <button class="ai-button" id="summarizeBtn">เล่าใหม่</button>
-                    <button class="ai-button" id="myStyleBtn">สรุปสั้น</button>
-                    <button class="ai-button" id="promptBtn">Prompt</button>
-                </div>
-            </div>
+        
+        <div class="controls">
+            <select id="language">
+                <option value="th">ไทย</option>
+                <option value="en">English</option>
+                <option value="ja">日本語</option>
+                <option value="ko">한국어</option>
+                <option value="zh-CN">中文</option>
+                <option value="es">Español</option>
+                <option value="fr">Français</option>
+                <option value="de">Deutsch</option>
+            </select>
+            <button id="speakBtn">อ่านออกเสียง</button>
+            <button id="stopBtn" disabled>หยุด</button>
         </div>
-
-        <div class="block">
-            <div class="controls-row">
-                <div class="control-buttons">
-                    <button id="playPauseBtn" style="width: 50px;">▶</button>
-                    <button id="prevBtn" style="width: 50px;">⏮</button>
-                    <button id="nextBtn" style="width: 50px;">⏭</button>
-                    <button id="clearBtn" style="width: 50px;">↻</button>
-                    <button id="wordListBtn" style="width: 50px;">📝</button>
-                    <button id="downloadBtn" style="width: 50px;">🎧</button>
-                </div>
-                <div class="speed-controls">
-                    <button class="speed-btn" data-speed="1.00" style="width: 50px;">1.00</button>
-                    <button class="speed-btn" data-speed="1.25" style="width: 50px;">1.25</button>
-                    <button class="speed-btn active" data-speed="1.35" style="width: 50px;">1.35</button>
-                    <button class="speed-btn" data-speed="1.40" style="width: 50px;">1.40</button>
-                </div>
-            </div>
+        
+        <div class="speed-control">
+            <span>ความเร็ว:</span>
+            <span class="speed-value">1.35x</span>
         </div>
-
-        <div class="block">
-            <div class="progress-info">
-                <div class="progress-text" id="progressText">0 of 0</div>
-                <div class="progress-center" id="modeText">ต้นฉบับ</div>
-                <div class="progress-text" id="percentageText">0%</div>
-            </div>
-            <div class="progress-bar">
-                <div class="progress-fill" id="progressFill"></div>
-            </div>
-        </div>
-
-        <div class="block">
-            <div class="current-chunk" id="currentChunk">
-                รอการเล่น...
-            </div>
-        </div>
-
-        <div class="block">
-            <div class="log-area" id="logArea"></div>
-        </div>
-    </div>
-
-    <div class="modal" id="wordListModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2 class="modal-title">แก้ไขคำศัพท์</h2>
-                <button class="close-modal">&times;</button>
-            </div>
-            
-            <textarea class="word-list" id="wordList" placeholder="รูปแบบ: คำเดิม;คำใหม่&#10;ตัวอย่าง:&#10;เจ้าชาย;คุณชาย&#10;นางฟ้า;เทพธิดา"></textarea>
-            
-            <div class="preview-row">
-                <input type="text" class="preview-text" id="previewInput" placeholder="ทดสอบคำที่แก้ไข...">
-                <button id="previewBtn">▶</button>
-                <button id="clearPreviewBtn">↻</button>
-            </div>
-            
-            <div class="actions-row">
-                <div class="action-buttons">
-                    <button id="importBtn">Import</button>
-                    <button id="exportBtn">Export</button>
-                    <button id="sortBtn">Auto Sort</button>
-                    <button id="applyBtn" class="primary">Apply</button>
-                </div>
-                <button id="closeModalBtn">ปิด</button>
-            </div>
-        </div>
-    </div>
-
-    <div class="modal" id="promptModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2 class="modal-title">ปรับแต่ง Prompt</h2>
-                <button class="close-modal" id="closePromptModalBtnTop">&times;</button>
-            </div>
-            
-            <div class="tabs">
-                <div class="tab active" data-tab="edit">จัดข้อความด้วย AI</div>
-                <div class="tab" data-tab="summarize">เล่าใหม่แบบสรุปความ</div>
-                <div class="tab" data-tab="mystyle">สรุปสั้น</div>
-            </div>
-            
-            <div class="tab-content active" id="editTab">
-                <textarea class="prompt-textarea" id="editPrompt" placeholder="ใส่ prompt สำหรับจัดข้อความด้วย AI..."></textarea>
-            </div>
-            
-            <div class="tab-content" id="summarizeTab">
-                <textarea class="prompt-textarea" id="summarizePrompt" placeholder="ใส่ prompt สำหรับเล่าใหม่แบบสรุปความ..."></textarea>
-            </div>
-            
-            <div class="tab-content" id="mystyleTab">
-                <textarea class="prompt-textarea" id="mystylePrompt" placeholder="ใส่ prompt สำหรับสรุปสั้น..."></textarea>
-            </div>
-            
-            <div class="actions-row" style="margin-top: 20px;">
-                <div class="action-buttons">
-                    <button id="resetPromptBtn">Reset ค่าเริ่มต้น</button>
-                    <button id="savePromptBtn" class="primary">บันทึก</button>
-                </div>
-                <button id="closePromptModalBtn">ปิด</button>
-            </div>
+        
+        <div id="status" class="status" style="display: none;"></div>
+        
+        <div class="example-text">
+            <h3>ตัวอย่างการใช้งาน:</h3>
+            <p>ระบบจะใช้ Google Translate เพื่ออ่านออกเสียงข้อความที่คุณป้อน โดยมีความเร็วในการอ่านที่ 1.35 เท่าของความเร็วปกติ ซึ่งเร็วกว่าปกติเล็กน้อยเพื่อให้การฟังมีประสิทธิภาพมากขึ้น</p>
         </div>
     </div>
 
     <script>
-        class TextToSpeechApp {
-            constructor() {
-                this.textChunks = [];
-                this.currentChunkIndex = 0;
-                this.isPlaying = false;
-                this.speed = 1.35;
-                this.wordReplacements = {};
-                this.audio = new Audio();
-                this.previewAudio = new Audio();
-                this.audioCache = new Map();
-                this.processingMode = 'ต้นฉบับ'; // 'ต้นฉบับ', 'จัดความ', 'เล่าใหม่', 'สรุปสั้น'
-                this.prompts = {
-                    edit: `กรุณาช่วยจัดรูปแบบข้อความนิยายจีนให้เป็น style การเล่านิยายจีนเรื่อง "กระบี่​จง​มา/​剑来/Jian Lai/SwordComing" ดังนี้:                 
-1. แบ่งข้อความเป็นประโยคยืดหยุ่น (grammar-aware chunks) โดยไม่กำหนดจำนวนคำตายตัว
-2. ตรวจและแก้ไขคำผิด (grammar correction)
-3. แบ่งวรรค (punctuation-aware chunking) ให้ถูกต้อง
-4. จำกัดความยาว chunk ไม่เกิน 170 ตัวอักษร ตามความเหมาะสม
-5. แก้ไขปัญหาการตัดคำผิดพลาด และประโยคยาวเกินไป
-6. ป้องกันการตัดคำกลางประโยคที่ทำให้ความหมายเปลี่ยน
-7. ต้องลบสัญลักษณ์ เช่น ? " ... ! * ( ) ฯลฯ อื่นๆ ที่จะทำให้ google translate อ่านผิด ตีความผิด โดยให้คงข้อความเดิมไว้
-8. รักษาภาษาต้นฉบับไว้ พร้อมทั้งเว้นวรรคให้เหมาะสมกับการอ่าน
-6. ให้เริ่มเรื่องเลย ไม่ต้องทวนคำถาม
-
-ข้อความที่ต้องประมวลผล:`, 
-                    summarize: `กรุณาช่วยเรียบเรียงใหม่และเล่าแบบสรุปความของข้อความนิยายจีนเรื่อง "กระบี่​จง​มา/​剑来/Jian Lai/SwordComing" ให้ครบถ้วนและละเอียด โดย:
-1. สรุปเนื้อหาสำคัญทั้งหมดโดยละเอียด
-2. รักษาลำดับเหตุการณ์และความต่อเนื่อง
-3. ใช้ภาษาที่เข้าใจง่ายและเหมาะสมกับการอ่านออกเสียง
-4. แบ่งเป็นประโยคสั้นๆ ที่เหมาะสมกับการอ่าน
-5. รักษาความเป็นนิยายไว้
-6. ให้เริ่มเรื่องเลย ไม่ต้องทวนคำถาม
-
-ข้อความที่ต้องสรุป:`, 
-                    mystyle: `กรุณาช่วยเรียบเรียงใหม่และเล่าแบบสรุปความของข้อความนิยายจีนเรื่อง "กระบี่​จง​มา/​剑来/Jian Lai/SwordComing" ให้ครบถ้วน โดย:
-1. สรุปเนื้อหาสำคัญทั้งหมดแบบสั้นๆ
-2. รักษาลำดับเหตุการณ์และความต่อเนื่อง (who what where how why)
-3. ใช้ภาษาที่เข้าใจง่ายและเหมาะสมกับการอ่านออกเสียง
-4. แบ่งเป็นประโยคสั้นๆ ที่เหมาะสมกับการอ่าน
-5. รักษาความเป็นนิยายไว้
-6. ให้เริ่มเรื่องเลย ไม่ต้องทวนคำถาม
-
-ข้อความที่ต้องประมวลผล:`
-                };
-                this.audioBlobs = [];
-                this.activeAIButton = null;
-                this.isAIProcessing = false;
-                this.backButtonPressed = false;
-                this.backButtonTimer = null;
-                this.init();
+        document.addEventListener('DOMContentLoaded', function() {
+            const textArea = document.getElementById('text');
+            const languageSelect = document.getElementById('language');
+            const speakBtn = document.getElementById('speakBtn');
+            const stopBtn = document.getElementById('stopBtn');
+            const statusDiv = document.getElementById('status');
+            
+            let audio = null;
+            let isPlaying = false;
+            
+            // ฟังก์ชันสร้าง URL สำหรับ Google Translate TTS
+            function generateTTSUrl(text, lang) {
+                // แทนที่ space ด้วย + เพื่อให้ URL ทำงานได้ดี
+                const encodedText = encodeURIComponent(text);
+                // ความเร็ว 1.35 เท่า (ปกติคือ 1.0)
+                return `https://translate.google.com/translate_tts?ie=UTF-8&q=${encodedText}&tl=${lang}&client=tw-ob&ttsspeed=1.35`;
             }
-
-            init() {
-                this.loadWordReplacements();
-                this.loadApiKey();
-                this.loadPrompts();
-                this.bindEvents();
-                this.log('ระบบเริ่มทำงาน');
-            }
-
-            bindEvents() {
-                // Control buttons
-                document.getElementById('playPauseBtn').addEventListener('click', () => this.togglePlayPause());
-                document.getElementById('prevBtn').addEventListener('click', () => this.previous());
-                document.getElementById('nextBtn').addEventListener('click', () => this.next());
-                document.getElementById('clearBtn').addEventListener('click', () => this.clear());
-                document.getElementById('wordListBtn').addEventListener('click', () => this.openWordList());
-                document.getElementById('downloadBtn').addEventListener('click', () => this.downloadAudio());
-
-                // Speed controls
-                document.querySelectorAll('.speed-btn').forEach(btn => {
-                    btn.addEventListener('click', () => {
-                        document.querySelectorAll('.speed-btn').forEach(b => b.classList.remove('active'));
-                        btn.classList.add('active');
-                        this.speed = parseFloat(btn.dataset.speed);
-                        this.log(`เปลี่ยนความเร็วเป็น ${this.speed}`);
-                        // Update playback rate if playing
-                        if (this.audio && this.isPlaying) {
-                            this.audio.playbackRate = this.speed;
-                        }
-                    });
-                });
-
-                // Text input change
-                document.getElementById('textInput').addEventListener('input', () => {
-                    this.processText();
-                });
-
-                // AI processing
-                document.getElementById('aiProcessBtn').addEventListener('click', () => this.processWithAI('aiProcessBtn'));
-                document.getElementById('summarizeBtn').addEventListener('click', () => this.summarizeWithAI('summarizeBtn'));
-                document.getElementById('myStyleBtn').addEventListener('click', () => this.myStyleWithAI('myStyleBtn'));
-                document.getElementById('promptBtn').addEventListener('click', () => this.openPromptModal());
-
-                // Modal events
-                document.querySelector('.close-modal').addEventListener('click', () => this.closeModals());
-                document.getElementById('closePromptModalBtnTop').addEventListener('click', () => this.closePromptModal());
-                document.getElementById('closeModalBtn').addEventListener('click', () => this.closeWordList());
-                document.getElementById('applyBtn').addEventListener('click', () => this.applyWordReplacements());
-                document.getElementById('previewBtn').addEventListener('click', () => this.previewText());
-                document.getElementById('clearPreviewBtn').addEventListener('click', () => {
-                    document.getElementById('previewInput').value = '';
-                });
-                document.getElementById('sortBtn').addEventListener('click', () => this.sortWordList());
-
-                // Prompt modal events
-                document.querySelectorAll('.tab').forEach(tab => {
-                    tab.addEventListener('click', () => this.switchTab(tab.dataset.tab));
-                });
-                document.getElementById('savePromptBtn').addEventListener('click', () => this.savePrompts());
-                document.getElementById('resetPromptBtn').addEventListener('click', () => this.resetPrompts());
-                document.getElementById('closePromptModalBtn').addEventListener('click', () => this.closePromptModal());
-
-                // Modal close on outside click
-                document.getElementById('wordListModal').addEventListener('click', (e) => {
-                    if (e.target === document.getElementById('wordListModal')) {
-                        this.closeWordList();
-                    }
-                });
-                document.getElementById('promptModal').addEventListener('click', (e) => {
-                    if (e.target === document.getElementById('promptModal')) {
-                        this.closePromptModal();
-                    }
-                });
-
-                // Audio event listeners
-                this.audio.addEventListener('ended', () => {
-                    this.handleAudioEnded();
-                });
-
-                this.audio.addEventListener('error', (e) => {
-                    this.log(`Audio error: ${e.message}`);
-                    this.handleAudioError();
-                });
-
-                this.previewAudio.addEventListener('error', (e) => {
-                    this.log(`Preview audio error: ${e.message}`);
-                });
-
-                // Save API key on input
-                document.getElementById('apiKey').addEventListener('input', () => {
-                    this.saveApiKey();
-                    this.checkApiKey();
-                });
-
-                // Back button press detection
-                document.getElementById('prevBtn').addEventListener('mousedown', () => {
-                    this.backButtonPressed = true;
-                    this.backButtonTimer = setTimeout(() => {
-                        if (this.backButtonPressed) {
-                            this.goToFirstChunk();
-                        }
-                    }, 2000); // 2 seconds hold to go to first chunk
-                });
-
-                document.getElementById('prevBtn').addEventListener('mouseup', () => {
-                    this.backButtonPressed = false;
-                    if (this.backButtonTimer) {
-                        clearTimeout(this.backButtonTimer);
-                        this.backButtonTimer = null;
-                    }
-                });
-
-                document.getElementById('prevBtn').addEventListener('mouseleave', () => {
-                    this.backButtonPressed = false;
-                    if (this.backButtonTimer) {
-                        clearTimeout(this.backButtonTimer);
-                        this.backButtonTimer = null;
-                    }
-                });
-            }
-
-            log(message) {
-                const logArea = document.getElementById('logArea');
-                const timestamp = new Date().toLocaleTimeString();
-                const logEntry = document.createElement('div');
-                logEntry.className = 'log-entry';
-                logEntry.innerHTML = `<span class="log-timestamp">[${timestamp}]</span> ${message}`;
-                logArea.appendChild(logEntry);
-                logArea.scrollTop = logArea.scrollHeight;
-            }
-
-            loadApiKey() {
-                const savedApiKey = this.getCookie('geminiApiKey');
-                if (savedApiKey) {
-                    document.getElementById('apiKey').value = savedApiKey;
-                }
-                this.checkApiKey();
-            }
-
-            saveApiKey() {
-                const apiKey = document.getElementById('apiKey').value;
-                if (apiKey) {
-                    this.setCookie('geminiApiKey', apiKey, 365);
-                    this.log('บันทึก API Key สำเร็จ');
-                }
-            }
-
-            setCookie(name, value, days) {
-                const expires = new Date();
-                expires.setTime(expires.getTime() + (days * 24 * 60 * 60 * 1000));
-                document.cookie = `${name}=${value};expires=${expires.toUTCString()};path=/`;
-            }
-
-            getCookie(name) {
-                const nameEQ = name + "=";
-                const ca = document.cookie.split(';');
-                for(let i = 0; i < ca.length; i++) {
-                    let c = ca[i];
-                    while (c.charAt(0) === ' ') c = c.substring(1, c.length);
-                    if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length, c.length);
-                }
-                return null;
-            }
-
-            checkApiKey() {
-                const apiKey = document.getElementById('apiKey').value;
-                const apiStatus = document.getElementById('apiStatus');
-                if (apiKey && apiKey.length > 10) {
-                    apiStatus.classList.add('ok');
-                } else {
-                    apiStatus.classList.remove('ok');
-                }
-            }
-
-            loadPrompts() {
-                const savedPrompts = this.getCookie('customPrompts');
-                if (savedPrompts) {
-                    try {
-                        this.prompts = JSON.parse(savedPrompts);
-                    } catch (error) {
-                        this.log('ไม่สามารถโหลด Prompt ได้');
-                    }
-                }
-                document.getElementById('editPrompt').value = this.prompts.edit;
-                document.getElementById('summarizePrompt').value = this.prompts.summarize;
-                document.getElementById('mystylePrompt').value = this.prompts.mystyle;
-            }
-
-            savePrompts() {
-                this.prompts.edit = document.getElementById('editPrompt').value;
-                this.prompts.summarize = document.getElementById('summarizePrompt').value;
-                this.prompts.mystyle = document.getElementById('mystylePrompt').value;
-                this.setCookie('customPrompts', JSON.stringify(this.prompts), 365);
-                this.log('บันทึก Prompt สำเร็จ');
-            }
-
-            resetPrompts() {
-                this.prompts = {
-                    edit: `กรุณาช่วยจัดรูปแบบข้อความนิยายจีนให้เป็น style การเล่านิยายจีนเรื่อง "กระบี่​จง​มา/​剑来/Jian Lai/SwordComing" ดังนี้:                 
-1. แบ่งข้อความเป็นประโยคยืดหยุ่น (grammar-aware chunks) โดยไม่กำหนดจำนวนคำตายตัว
-2. ตรวจและแก้ไขคำผิด (grammar correction)
-3. แบ่งวรรค (punctuation-aware chunking) ให้ถูกต้อง
-4. จำกัดความยาว chunk ไม่เกิน 170 ตัวอักษร ตามความเหมาะสม
-5. แก้ไขปัญหาการตัดคำผิดพลาด และประโยคยาวเกินไป
-6. ป้องกันการตัดคำกลางประโยคที่ทำให้ความหมายเปลี่ยน
-7. ต้องลบสัญลักษณ์ เช่น ? " ... ! * ( ) ฯลฯ อื่นๆ ที่จะทำให้ google translate อ่านผิด ตีความผิด โดยให้คงข้อความเดิมไว้
-8. รักษาภาษาต้นฉบับไว้ พร้อมทั้งเว้นวรรคให้เหมาะสมกับการอ่าน
-6. ให้เริ่มเรื่องเลย ไม่ต้องทวนคำถาม
-
-ข้อความที่ต้องประมวลผล:`, 
-                    summarize: `กรุณาช่วยเรียบเรียงใหม่และเล่าแบบสรุปความของข้อความนิยายจีนเรื่อง "กระบี่​จง​มา/​剑来/Jian Lai/SwordComing" ให้ครบถ้วนและละเอียด โดย:
-1. สรุปเนื้อหาสำคัญทั้งหมดโดยละเอียด
-2. รักษาลำดับเหตุการณ์และความต่อเนื่อง
-3. ใช้ภาษาที่เข้าใจง่ายและเหมาะสมกับการอ่านออกเสียง
-4. แบ่งเป็นประโยคสั้นๆ ที่เหมาะสมกับการอ่าน
-5. รักษาความเป็นนิยายไว้
-6. ให้เริ่มเรื่องเลย ไม่ต้องทวนคำถาม
-
-ข้อความที่ต้องสรุป:`, 
-                    mystyle: `กรุณาช่วยเรียบเรียงใหม่และเล่าแบบสรุปความของข้อความนิยายจีนเรื่อง "กระบี่​จง​มา/​剑来/Jian Lai/SwordComing" ให้ครบถ้วน โดย:
-1. สรุปเนื้อหาสำคัญทั้งหมดแบบสั้นๆ
-2. รักษาลำดับเหตุการณ์และความต่อเนื่อง (who what where how why)
-3. ใช้ภาษาที่เข้าใจง่ายและเหมาะสมกับการอ่านออกเสียง
-4. แบ่งเป็นประโยคสั้นๆ ที่เหมาะสมกับการอ่าน
-5. รักษาความเป็นนิยายไว้
-6. ให้เริ่มเรื่องเลย ไม่ต้องทวนคำถาม
-
-ข้อความที่ต้องประมวลผล:`
-                };
-                document.getElementById('editPrompt').value = this.prompts.edit;
-                document.getElementById('summarizePrompt').value = this.prompts.summarize;
-                document.getElementById('mystylePrompt').value = this.prompts.mystyle;
-                this.log('Reset Prompt ค่าเริ่มต้น');
-            }
-
-            switchTab(tabName) {
-                document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
-                document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            
+            // ฟังก์ชันแสดงสถานะ
+            function showStatus(message, type) {
+                statusDiv.textContent = message;
+                statusDiv.className = 'status ' + type;
+                statusDiv.style.display = 'block';
                 
-                document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
-                document.getElementById(`${tabName}Tab`).classList.add('active');
+                // ซ่อนสถานะหลัง 3 วินาที
+                setTimeout(() => {
+                    statusDiv.style.display = 'none';
+                }, 3000);
             }
-
-            processText(preservePlaybackState = false) {
-                const text = document.getElementById('textInput').value;
-                if (!text.trim()) {
-                    this.textChunks = [];
-                    this.updateProgress();
-                    return;
-                }
-
-                // Apply word replacements
-                let processedText = this.applyReplacements(text);
+            
+            // ฟังก์ชันอ่านออกเสียง
+            function speakText() {
+                const text = textArea.value.trim();
+                const lang = languageSelect.value;
                 
-                // Clean and split text into chunks
-                const oldTextChunks = this.textChunks; // Store old chunks for comparison
-                this.textChunks = this.splitTextIntoChunks(processedText);
-
-                if (!preservePlaybackState) {
-                    this.currentChunkIndex = 0;
-                    this.audioCache.forEach(url => URL.revokeObjectURL(url));
-                    this.audioCache.clear();
-                    this.audioBlobs = [];
-                } else {
-                    // If preserving state, clear cache for current and future chunks
-                    // as replacements can affect them.
-                    if (this.audio) {
-                        this.audio.pause();
-                        this.audio.src = ''; // Clear current audio source
-                    }
-                    for (let i = this.currentChunkIndex; i < oldTextChunks.length; i++) {
-                        if (this.audioCache.has(i)) {
-                            URL.revokeObjectURL(this.audioCache.get(i));
-                            this.audioCache.delete(i);
-                        }
-                    }
-                }
-
-                this.updateProgress();
-                this.log(`ประมวลผลข้อความแล้ว ${this.textChunks.length} ส่วน`);
-
-                if (preservePlaybackState && this.isPlaying) {
-                    // Resume playback from currentChunkIndex
-                    this.playChunk(this.currentChunkIndex);
-                }
-            }
-
-            applyReplacements(text) {
-                let result = text;
-                for (const [oldWord, newWord] of Object.entries(this.wordReplacements)) {
-                    result = result.replace(new RegExp(oldWord.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'), newWord);
-                }
-                return result;
-            }
-
-            splitTextIntoChunks(text) {
-                // Remove unwanted characters but preserve sentence structure
-                let cleanText = text.replace(/[!?*"()…\[\]{}<>@#$%^&+=_~`|\/:;]/g, '');
-                
-                // Split by sentences (grammar-aware)
-                const sentences = cleanText.split(/(?<=[.!?])\s+|(?<=\n)\s*/);
-                const chunks = [];
-                let currentChunk = '';
-
-                for (const sentence of sentences) {
-                    const cleanSentence = sentence.trim();
-                    if (!cleanSentence) continue;
-
-                    // If adding this sentence exceeds limit, push current chunk and start new
-                    if ((currentChunk + ' ' + cleanSentence).length > 170) {
-                        if (currentChunk) {
-                            chunks.push(currentChunk.trim());
-                        }
-                        // Start new chunk with current sentence if it's not too long
-                        if (cleanSentence.length <= 170) {
-                            currentChunk = cleanSentence;
-                        } else {
-                            // If sentence is too long, split it by words
-                            const words = cleanSentence.split(' ');
-                            let tempChunk = '';
-                            for (const word of words) {
-                                if ((tempChunk + ' ' + word).length > 170) {
-                                    if (tempChunk) {
-                                        chunks.push(tempChunk.trim());
-                                    }
-                                    tempChunk = word;
-                                } else {
-                                    tempChunk = tempChunk ? tempChunk + ' ' + word : word;
-                                }
-                            }
-                            if (tempChunk) {
-                                chunks.push(tempChunk.trim());
-                            }
-                            currentChunk = '';
-                        }
-                    } else {
-                        currentChunk = currentChunk ? currentChunk + ' ' + cleanSentence : cleanSentence;
-                    }
-                }
-
-                // Add last chunk
-                if (currentChunk) {
-                    chunks.push(currentChunk.trim());
-                }
-
-                return chunks;
-            }
-
-            setActiveAIButton(buttonId) {
-                // Remove active class from all AI buttons
-                document.querySelectorAll('.ai-button').forEach(btn => {
-                    btn.classList.remove('active');
-                });
-                
-                // Add active class to clicked button
-                if (buttonId) {
-                    document.getElementById(buttonId).classList.add('active');
-                    this.activeAIButton = buttonId;
-                } else {
-                    this.activeAIButton = null;
-                }
-            }
-
-            disableAIButtons() {
-                document.getElementById('aiProcessBtn').disabled = true;
-                document.getElementById('summarizeBtn').disabled = true;
-                document.getElementById('myStyleBtn').disabled = true;
-                this.isAIProcessing = true;
-            }
-
-            enableAIButtons() {
-                document.getElementById('aiProcessBtn').disabled = false;
-                document.getElementById('summarizeBtn').disabled = false;
-                document.getElementById('myStyleBtn').disabled = false;
-                this.isAIProcessing = false;
-            }
-
-            async processWithAI(buttonId) {
-                if (this.isAIProcessing) return;
-                
-                const apiKey = document.getElementById('apiKey').value;
-                const model = document.getElementById('modelSelect').value;
-                const text = document.getElementById('textInput').value;
-                
-                if (!apiKey) {
-                    this.log('กรุณาใส่ API Key');
+                if (!text) {
+                    showStatus('กรุณาใส่ข้อความที่ต้องการอ่านออกเสียง', 'error');
                     return;
                 }
                 
-                if (!text.trim()) {
-                    this.log('ไม่มีข้อความให้ประมวลผล');
-                    return;
+                // หยุดเสียงเก่าถ้ามี
+                if (audio) {
+                    audio.pause();
                 }
-                
-                const aiButton = document.getElementById('aiProcessBtn');
-                aiButton.disabled = true;
-                aiButton.textContent = 'แก้ไข...';
-                this.setActiveAIButton(buttonId);
-                this.disableAIButtons();
                 
                 try {
-                    const fullPrompt = this.prompts.edit + '\n' + text;
-
-                    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({
-                            contents: [{
-                                parts: [{
-                                    text: fullPrompt
-                                }]
-                            }]
-                        })
-                    });
-
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! status: ${response.status}`);
-                    }
-
-                    const data = await response.json();
-                    const aiResponse = data.candidates[0].content.parts[0].text;
+                    const ttsUrl = generateTTSUrl(text, lang);
+                    audio = new Audio(ttsUrl);
                     
-                    document.getElementById('textInput').value = aiResponse;
-                    this.processingMode = 'จัดความ';
-                    this.processText();
-                    this.playNotificationSound();
-                    this.log('ประมวลผลด้วย AI สำเร็จ');
+                    audio.onplay = function() {
+                        isPlaying = true;
+                        speakBtn.disabled = true;
+                        stopBtn.disabled = false;
+                        showStatus('กำลังอ่านออกเสียง...', 'success');
+                    };
+                    
+                    audio.onended = function() {
+                        isPlaying = false;
+                        speakBtn.disabled = false;
+                        stopBtn.disabled = true;
+                    };
+                    
+                    audio.onerror = function() {
+                        isPlaying = false;
+                        speakBtn.disabled = false;
+                        stopBtn.disabled = true;
+                        showStatus('ไม่สามารถอ่านออกเสียงได้ กรุณาลองใหม่อีกครั้ง', 'error');
+                    };
+                    
+                    audio.play();
                 } catch (error) {
-                    this.log(`AI Processing error: ${error.message}`);
-                } finally {
-                    aiButton.disabled = false;
-                    aiButton.textContent = 'จัดความ';
-                    this.enableAIButtons();
+                    showStatus('เกิดข้อผิดพลาดในการอ่านออกเสียง', 'error');
+                    speakBtn.disabled = false;
+                    stopBtn.disabled = true;
                 }
             }
-
-            async summarizeWithAI(buttonId) {
-                if (this.isAIProcessing) return;
-                
-                const apiKey = document.getElementById('apiKey').value;
-                const model = document.getElementById('modelSelect').value;
-                const text = document.getElementById('textInput').value;
-                
-                if (!apiKey) {
-                    this.log('กรุณาใส่ API Key');
-                    return;
+            
+            // ฟังก์ชันหยุดเสียง
+            function stopText() {
+                if (audio) {
+                    audio.pause();
+                    audio.currentTime = 0;
                 }
-                
-                if (!text.trim()) {
-                    this.log('ไม่มีข้อความให้ประมวลผล');
-                    return;
+                isPlaying = false;
+                speakBtn.disabled = false;
+                stopBtn.disabled = true;
+                showStatus('หยุดการอ่านออกเสียง', 'success');
+            }
+            
+            // Event listeners
+            speakBtn.addEventListener('click', speakText);
+            stopBtn.addEventListener('click', stopText);
+            
+            // หยุดเสียงเมื่อหน้าเว็บถูกปิด
+            window.addEventListener('beforeunload', function() {
+                if (audio) {
+                    audio.pause();
                 }
-                
-                const summarizeButton = document.getElementById('summarizeBtn');
-                summarizeButton.disabled = true;
-                summarizeButton.textContent = 'กำลังสรุป...';
-                this.setActiveAIButton(buttonId);
-                this.disableAIButtons();
-                
-                try {
-                    const fullPrompt = this.prompts.summarize + '\n' + text;
-
-                    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({
-                            contents: [{
-                                parts: [{
-                                    text: fullPrompt
-                                }]
-                            }]
-                        })
-                    });
-
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! status: ${response.status}`);
-                    }
-
-                    const data = await response.json();
-                    const aiResponse = data.candidates[0].content.parts[0].text;
-                    
-                    document.getElementById('textInput').value = aiResponse;
-                    this.processingMode = 'เล่าใหม่';
-                    this.processText();
-                    this.playNotificationSound();
-                    this.log('สรุปเนื้อหาด้วย AI สำเร็จ');
-                } catch (error) {
-                    this.log(`AI Summarize error: ${error.message}`);
-                } finally {
-                    summarizeButton.disabled = false;
-                    summarizeButton.textContent = 'เล่าใหม่';
-                    this.enableAIButtons();
-                }
-            }
-
-            async myStyleWithAI(buttonId) {
-                if (this.isAIProcessing) return;
-                
-                const apiKey = document.getElementById('apiKey').value;
-                const model = document.getElementById('modelSelect').value;
-                const text = document.getElementById('textInput').value;
-                
-                if (!apiKey) {
-                    this.log('กรุณาใส่ API Key');
-                    return;
-                }
-                
-                if (!text.trim()) {
-                    this.log('ไม่มีข้อความให้ประมวลผล');
-                    return;
-                }
-                
-                const myStyleButton = document.getElementById('myStyleBtn');
-                myStyleButton.disabled = true;
-                myStyleButton.textContent = 'แก้ไข...';
-                this.setActiveAIButton(buttonId);
-                this.disableAIButtons();
-                
-                try {
-                    const fullPrompt = this.prompts.mystyle + '\n' + text;
-
-                    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({
-                            contents: [{
-                                parts: [{
-                                    text: fullPrompt
-                                }]
-                            }]
-                        })
-                    });
-
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! status: ${response.status}`);
-                    }
-
-                    const data = await response.json();
-                    const aiResponse = data.candidates[0].content.parts[0].text;
-                    
-                    document.getElementById('textInput').value = aiResponse;
-                    this.processingMode = 'สรุปสั้น';
-                    this.processText();
-                    this.playNotificationSound();
-                    this.log('ประมวลผลด้วย AI สรุปสั้น สำเร็จ');
-                } catch (error) {
-                    this.log(`AI My Style error: ${error.message}`);
-                } finally {
-                    myStyleButton.disabled = false;
-                    myStyleButton.textContent = 'สรุปสั้น';
-                    this.enableAIButtons();
-                }
-            }
-
-            playNotificationSound() {
-                try {
-                    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-                    const oscillator = audioContext.createOscillator();
-                    const gainNode = audioContext.createGain();
-                    
-                    oscillator.connect(gainNode);
-                    gainNode.connect(audioContext.destination);
-                    
-                    oscillator.frequency.value = 800;
-                    oscillator.type = 'sine';
-                    
-                    gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
-                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
-                    
-                    oscillator.start(audioContext.currentTime);
-                    oscillator.stop(audioContext.currentTime + 0.5);
-                } catch (e) {
-                    console.log('Web Audio API not supported');
-                }
-            }
-
-            async play() {
-                if (this.textChunks.length === 0) {
-                    this.log('ไม่มีข้อความให้เล่น');
-                    return;
-                }
-
-                this.isPlaying = true;
-                this.updatePlayPauseButton();
-                this.log('เริ่มเล่น...');
-                
-                // Pre-cache chunks
-                await this.preCacheChunks(this.currentChunkIndex, 5);
-                
-                // Play current chunk
-                await this.playChunk(this.currentChunkIndex);
-            }
-
-            pause() {
-                this.isPlaying = false;
-                if (this.audio) {
-                    this.audio.pause();
-                }
-                this.updatePlayPauseButton();
-                this.log('หยุดชั่วคราว');
-            }
-
-            togglePlayPause() {
-                if (this.isPlaying) {
-                    this.pause();
-                } else {
-                    this.play();
-                }
-            }
-
-            updatePlayPauseButton() {
-                const button = document.getElementById('playPauseBtn');
-                if (this.isPlaying) {
-                    button.textContent = '⏸';
-                } else {
-                    button.textContent = '▶';
-                }
-            }
-
-            async preCacheChunks(startIndex, count) {
-                const endIndex = Math.min(startIndex + count, this.textChunks.length);
-                for (let i = startIndex; i < endIndex; i++) {
-                    if (!this.audioCache.has(i)) {
-                        await this.cacheAudio(i);
-                    }
-                }
-            }
-
-            // *** ส่วนที่แก้ไข: เปลี่ยนไปใช้ Google Translate TTS ***
-            async cacheAudio(index) {
-                const chunk = this.textChunks[index];
-                if (!chunk || this.audioCache.has(index)) return;
-
-                try {
-                    // สร้าง URL สำหรับ Google Translate TTS
-                    const googleTtsUrl = `https://translate.google.com/translate_tts?ie=UTF-8&q=${encodeURIComponent(chunk)}&tl=th&client=tw-ob`;
-                    this.audioCache.set(index, googleTtsUrl);
-                    this.log(`Cached chunk ${index + 1}/${this.textChunks.length}`);
-                } catch (error) {
-                    this.log(`Error caching chunk ${index}: ${error.message}`);
-                }
-            }
-            // *** สิ้นสุดการแก้ไข ***
-
-            async playChunk(index) {
-                if (index >= this.textChunks.length) {
-                    this.playEndSound();
-                    return;
-                }
-
-                const chunk = this.textChunks[index];
-                document.getElementById('currentChunk').textContent = chunk;
-                this.updateProgress();
-
-                if (this.audioCache.has(index)) {
-                    const audioUrl = this.audioCache.get(index);
-                    this.audio.src = audioUrl;
-                    this.audio.playbackRate = this.speed;
-                    
-                    try {
-                        await this.audio.play();
-                        this.log(`กำลังเล่นส่วนที่ ${index + 1}: [${chunk.length}] "${chunk.substring(0, 30)}"...`);
-                        
-                        // Pre-cache next chunks
-                        if (index + 1 < this.textChunks.length) {
-                            this.preCacheChunks(index + 1, 3);
-                        }
-                    } catch (error) {
-                        this.log(`Error playing chunk: ${error.message}`);
-                        // Try force play
-                        setTimeout(() => {
-                            if (this.isPlaying) {
-                                this.forcePlay();
-                            }
-                        }, 100);
-                    }
-                } else {
-                    // Cache and play if not cached
-                    await this.cacheAudio(index);
-                    if (this.isPlaying) {
-                       await this.playChunk(index);
-                    }
-                }
-            }
-
-            async forcePlay() {
-                try {
-                    await this.audio.play();
-                    this.log('Force play successful');
-                } catch (error) {
-                    this.log(`Force play failed: ${error.message}`);
-                }
-            }
-
-            playEndSound() {
-                this.log(`จบตอน (ความเร็ว ${this.speed})`);
-                this.isPlaying = false;
-                this.updatePlayPauseButton();
-                this.updateProgress();
-            }
-
-            handleAudioEnded() {
-                if (this.isPlaying) {
-                    if (this.currentChunkIndex < this.textChunks.length - 1) {
-                        this.currentChunkIndex++;
-                        this.playChunk(this.currentChunkIndex);
-                    } else {
-                        this.playEndSound();
-                    }
-                }
-            }
-
-            handleAudioError() {
-                this.log('Audio playback error - trying next chunk');
-                if (this.isPlaying) {
-                    if (this.currentChunkIndex < this.textChunks.length - 1) {
-                        this.currentChunkIndex++;
-                        this.playChunk(this.currentChunkIndex);
-                    }
-                } else {
-                    this.playEndSound();
-                }
-            }
-
-            previous() {
-                if (this.currentChunkIndex > 0) {
-                    this.currentChunkIndex--;
-                    this.log(`ย้อนกลับไปยัง chunk ${this.currentChunkIndex + 1}`);
-                    if (this.isPlaying) {
-                        this.audio.pause();
-                        this.playChunk(this.currentChunkIndex);
-                    } else {
-                        this.updateDisplay();
-                    }
-                }
-            }
-
-            goToFirstChunk() {
-                this.currentChunkIndex = 0;
-                this.log(`ย้อนกลับไปที่ chunk 1`);
-                if (this.isPlaying) {
-                    this.audio.pause();
-                    this.playChunk(this.currentChunkIndex);
-                } else {
-                    this.updateDisplay();
-                }
-            }
-
-            next() {
-                if (this.currentChunkIndex < this.textChunks.length - 1) {
-                    this.currentChunkIndex++;
-                    this.log(`ไปยัง chunk ถัดไป ${this.currentChunkIndex + 1}`);
-                    if (this.isPlaying) {
-                        this.audio.pause();
-                        this.playChunk(this.currentChunkIndex);
-                    } else {
-                        this.updateDisplay();
-                    }
-                }
-            }
-
-            clear() {
-                document.getElementById('textInput').value = '';
-                this.textChunks = [];
-                this.currentChunkIndex = 0;
-                this.isPlaying = false;
-                if (this.audio) {
-                    this.audio.pause();
-                }
-                this.audioCache.forEach(url => URL.revokeObjectURL(url));
-                this.audioCache.clear();
-                this.audioBlobs = [];
-                this.processingMode = 'ต้นฉบับ';
-                this.setActiveAIButton(null);
-                document.getElementById('currentChunk').textContent = 'รอการเล่น...';
-                this.updateProgress();
-                this.updatePlayPauseButton();
-                this.log('ล้างข้อมูลทั้งหมด');
-            }
-
-            updateDisplay() {
-                if (this.textChunks.length > 0 && this.currentChunkIndex < this.textChunks.length) {
-                    document.getElementById('currentChunk').textContent = this.textChunks[this.currentChunkIndex];
-                } else {
-                    document.getElementById('currentChunk').textContent = 'รอการเล่น...';
-                }
-                this.updateProgress();
-            }
-
-            updateProgress() {
-                const progressText = document.getElementById('progressText');
-                const percentageText = document.getElementById('percentageText');
-                const modeText = document.getElementById('modeText');
-                const progressFill = document.getElementById('progressFill');
-
-                if (this.textChunks.length > 0) {
-                    const current = this.currentChunkIndex + 1;
-                    const total = this.textChunks.length;
-                    const percentage = Math.round((current / total) * 100);
-
-                    progressText.textContent = `${current} of ${total}`;
-                    modeText.textContent = this.processingMode;
-                    percentageText.textContent = `${percentage}%`;
-                    progressFill.style.width = `${percentage}%`;
-                } else {
-                    progressText.textContent = '0 of 0';
-                    modeText.textContent = 'ต้นฉบับ';
-                    percentageText.textContent = '0%';
-                    progressFill.style.width = '0%';
-                }
-            }
-
-            openWordList() {
-                document.getElementById('wordListModal').style.display = 'flex';
-                document.getElementById('wordList').value = this.getWordListText();
-            }
-
-            closeWordList() {
-                document.getElementById('wordListModal').style.display = 'none';
-            }
-
-            openPromptModal() {
-                document.getElementById('promptModal').style.display = 'flex';
-            }
-
-            closePromptModal() {
-                document.getElementById('promptModal').style.display = 'none';
-            }
-
-            closeModals() {
-                this.closeWordList();
-                this.closePromptModal();
-            }
-
-            getWordListText() {
-                return Object.entries(this.wordReplacements)
-                    .map(([oldWord, newWord]) => `${oldWord};${newWord}`)
-                    .join('\n');
-            }
-
-            applyWordReplacements() {
-                const wordListText = document.getElementById('wordList').value;
-                this.wordReplacements = {};
-
-                wordListText.split('\n').forEach(line => {
-                    const parts = line.split(';');
-                    if (parts.length === 2) {
-                        const oldWord = parts[0].trim();
-                        const newWord = parts[1].trim();
-                        if (oldWord && newWord) {
-                            this.wordReplacements[oldWord] = newWord;
-                        }
-                    }
-                });
-
-                this.setCookie('wordReplacements', JSON.stringify(this.wordReplacements), 365);
-                this.log(`บันทึกคำศัพท์ ${Object.keys(this.wordReplacements).length} รายการ`);
-                
-                this.processText(true);
-                this.closeWordList();
-            }
-
-            loadWordReplacements() {
-                const saved = this.getCookie('wordReplacements');
-                if (saved) {
-                    try {
-                        this.wordReplacements = JSON.parse(saved);
-                    } catch (error) {
-                        this.log('ไม่สามารถโหลดคำศัพท์ได้');
-                    }
-                }
-            }
-
-            async previewText() {
-                const previewText = document.getElementById('previewInput').value;
-                if (!previewText) return;
-
-                const processedText = this.applyReplacements(previewText);
-                this.log(`Preview: "${processedText}"`);
-
-                try {
-                    // Use Google Translate TTS for preview
-                    const googleTtsUrl = `https://translate.google.com/translate_tts?ie=UTF-8&q=${encodeURIComponent(processedText)}&tl=th&client=tw-ob`;
-                    this.previewAudio.src = googleTtsUrl;
-                    this.previewAudio.playbackRate = this.speed;
-                    
-                    await this.previewAudio.play();
-                    this.log('Playing preview audio');
-                } catch (error) {
-                    this.log(`Error playing preview: ${error.message}`);
-                }
-            }
-
-            sortWordList() {
-                const wordList = document.getElementById('wordList');
-                const lines = wordList.value.split('\n')
-                    .filter(line => line.trim())
-                    .sort((a, b) => {
-                        const aKey = a.split(';')[0] || '';
-                        const bKey = b.split(';')[0] || '';
-                        return aKey.localeCompare(bKey);
-                    });
-                wordList.value = lines.join('\n');
-                this.log('จัดเรียงคำศัพท์แล้ว');
-            }
-
-            async downloadAudio() {
-                if (this.textChunks.length === 0) {
-                    this.log('ไม่มีข้อความให้ดาวน์โหลด');
-                    return;
-                }
-
-                this.log('กำลังเตรียมไฟล์เสียงสำหรับดาวน์โหลด...');
-
-                try {
-                    // Create a downloadable text file with the chunks
-                    const content = this.textChunks.join('\n\n');
-                    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
-                    const url = URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.href = url;
-                    a.download = 'narration_chunks.txt';
-                    document.body.appendChild(a);
-                    a.click();
-                    document.body.removeChild(a);
-                    URL.revokeObjectURL(url);
-                    this.log('ดาวน์โหลดไฟล์ข้อความสำเร็จ');
-                } catch (error) {
-                    this.log(`เกิดข้อผิดพลาดในการดาวน์โหลด: ${error.message}`);
-                }
-            }
-        }
-
-        // Initialize app when DOM is loaded
-        document.addEventListener('DOMContentLoaded', () => {
-            window.app = new TextToSpeechApp();
+            });
         });
     </script>
 </body>
