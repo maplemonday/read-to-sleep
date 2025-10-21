@@ -72,7 +72,7 @@
             min-height: 100vh;
             display: flex;
             justify-content: center;
-            align-items: center;
+            align-items: top;
             padding: 20px;
         }
 
@@ -106,7 +106,7 @@
 
         textarea {
             width: 100%;
-            height: 150px;
+            height: 250px;
             background-color: var(--bg-tertiary);
             border: 1px solid #333;
             border-radius: 8px;
@@ -135,7 +135,7 @@
             border: 1px solid #444;
             border-radius: 8px;
             padding: 16px 12px;
-            font-size: 13px;
+            font-size: 16px;
             cursor: pointer;
             transition: all 0.3s ease;
             flex: 1;
@@ -174,7 +174,7 @@
             padding: 8px 12px;
             border-radius: 8px;
             cursor: pointer;
-            font-size: 13px;
+            font-size: 16px;
             transition: all 0.2s ease;
             min-width: 80px;
             text-align: center;
@@ -691,7 +691,7 @@
         <h1>Read to Sleep</h1>
         
         <div class="input-group">
-            <label for="text">เนื้อเรื่อง:</label>
+            <!-- <label for="text">เนื้อเรื่อง:</label> -->
             <textarea id="text" placeholder="ข้อความที่ต้องการให้อ่านออกเสียง..."></textarea>
         </div>
         
@@ -934,19 +934,16 @@
             const playAllBtn = document.getElementById('playAllBtn');
             const clearAllBtn = document.getElementById('clearAllBtn');
             
-            let audioQueue = [];
-            let audioElements = [];
+            let audioQueue = []; // This will now hold TEXT chunks
+            let audioBuffer = new Map(); // Holds pre-fetched Audio objects {index: audio}
             let isPlaying = false;
             let isPaused = false;
             let currentIndex = 0;
             let previewAudio = null;
             let customWords = {};
             let playlist = [];
-            let currentPlayingIds = []; // This is for 'Play All', should be renamed or refactored.
+            let currentPlayingIds = [];
             let currentPlayingItemId = null; // Tracks the single item playing from the playlist
-            let preloadedChunks = []; // เก็บ audio elements ที่ preloaded
-            let preloadQueue = []; // คิวสำหรับ preloading
-            let preloadIndex = 0; // index สำหรับ preloading
             let currentAudio = null; // ตัวแปรเก็บ audio ปัจจุบัน
             let chunksForDisplay = []; // เก็บ chunks สำหรับแสดงใน live text
             let isLocalProxyAvailable = true; // Assume local proxy is available by default
@@ -1289,106 +1286,115 @@
                     statusDiv.className = 'status playing';
                 } 
             }
-            
-            // ฟังก์ชัน pre-cache audio elements แบบ batch
-            function preloadAudioElements() {
-                preloadedChunks = [];
-                preloadQueue = [];
-                preloadIndex = 0;
-                log('Preloading audio elements...');
-                
-                // สร้าง preload queue
-                for (let i = 0; i < audioQueue.length; i++) {
-                    preloadQueue.push({
-                        url: audioQueue[i],
-                        index: i
-                    });
-                }
-                
-                // เริ่ม preload 3 chunks แรก
-                preloadNextBatch();
-            }
-            
-            // ฟังก์ชัน preload 3 chunks ถัดไป
-            function preloadNextBatch() {
-                const batchSize = 3;
-                let loadedCount = 0;
-                
-                for (let i = 0; i < batchSize && preloadIndex < preloadQueue.length; i++) {
-                    const item = preloadQueue[preloadIndex];
-                    const audio = new Audio(item.url);
-                    audio.preload = 'auto';
-                    audio.playbackRate = 1.35;
-                    
-                    // เก็บ audio element ตาม index
-                    preloadedChunks[item.index] = audio;
-                    preloadIndex++;
-                    loadedCount++;
-                }
-                
-                log(`Preloaded ${loadedCount} chunks, up to index ${preloadIndex - 1}.`);
-            }
-            
-            // ฟังก์ชันเล่นเสียงจาก queue พร้อม preloading
-            function playNext() {
-                if (currentIndex >= audioQueue.length || !isPlaying) {
-                    if (!isPaused) {
-                        finishPlayback();
+
+            // --- New Buffering Logic ---
+            async function fillAudioBuffer() {
+                const PRELOAD_AHEAD = 3; // How many chunks to preload
+                const MAX_RETRIES = 3;
+                const RETRY_DELAY = 2000; // 2 seconds
+                log(`fillAudioBuffer called. Current index: ${currentIndex}`);
+
+                for (let i = 0; i < PRELOAD_AHEAD; i++) {
+                    const lookaheadIndex = currentIndex + i;
+
+                    if (lookaheadIndex >= audioQueue.length) continue; // End of queue
+                    if (audioBuffer.has(lookaheadIndex)) continue; // Already buffered or fetching
+
+                    audioBuffer.set(lookaheadIndex, 'fetching');
+                    const chunkText = audioQueue[lookaheadIndex];
+
+                    let success = false;
+                    for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+                        try {
+                            log(`Fetching chunk ${lookaheadIndex + 1}, attempt ${attempt}...`);
+                            const url = await generateTTSUrl(chunkText, lookaheadIndex, audioQueue.length);
+                            if (url) {
+                                const audio = new Audio(url);
+                                audio.preload = 'auto';
+                                audio.playbackRate = 1.35;
+                                audioBuffer.set(lookaheadIndex, audio);
+                                log(`Chunk ${lookaheadIndex + 1} is now buffered.`);
+                                success = true;
+                                break; // Exit retry loop on success
+                            } else {
+                                throw new Error('generateTTSUrl returned null');
+                            }
+                        } catch (error) {
+                            log(`Attempt ${attempt} failed for chunk ${lookaheadIndex + 1}.`, error);
+                            if (attempt < MAX_RETRIES) {
+                                log(`Retrying in ${RETRY_DELAY / 1000} seconds...`);
+                                await new Promise(resolve => setTimeout(resolve, RETRY_DELAY));
+                            } else {
+                                isPlaying = false;
+                            }
+                        }
                     }
+
+                    if (!success) {
+                        log(`All retry attempts failed for chunk ${lookaheadIndex + 1}.`);
+                        audioBuffer.delete(lookaheadIndex); // Mark as failed
+                    }
+                }
+            }
+            
+            async function playNext() {
+                if (currentIndex >= audioQueue.length || !isPlaying) {
+                    if (!isPaused) finishPlayback();
+                    return;
+                }
+
+                updateProgress();
+                updateLiveText();
+
+                fillAudioBuffer();
+
+                let audio = audioBuffer.get(currentIndex);
+
+                while (audio === 'fetching') {
+                    log(`Waiting for chunk ${currentIndex + 1} to finish buffering...`);
+                    await new Promise(resolve => setTimeout(resolve, 200));
+                    audio = audioBuffer.get(currentIndex);
+                }
+
+                if (!audio || !(audio instanceof Audio)) {
+                    log(`Error: Chunk ${currentIndex + 1} could not be loaded. Stopping playback.`);
+                    updateStatus(`ไม่สามารถโหลดเสียงส่วนที่ ${currentIndex + 1} ได้`, 'error');
+                    stopSpeech();
                     return;
                 }
                 
-                updateProgress();
-                updateLiveText(); // อัปเดต live text
+                currentAudio = audio;
                 log(`Playing chunk ${currentIndex + 1}/${audioQueue.length}.`);
-                
-                // ตรวจสอบว่ามี preloaded chunk หรือไม่
-                currentAudio = preloadedChunks[currentIndex];
-                
-                // ถ้าไม่มีให้สร้างใหม่ (fallback)
-                if (!currentAudio) {
-                    log(`Chunk ${currentIndex + 1} was not preloaded, creating new audio element.`);
-                    currentAudio = new Audio(audioQueue[currentIndex]);
-                    currentAudio.preload = 'auto';
-                    currentAudio.playbackRate = 1.35;
-                }
-                
+
                 currentAudio.play().catch(error => {
                     log(`Error playing chunk ${currentIndex + 1}:`, error);
                     updateStatus('ไม่สามารถอ่านออกเสียงได้', 'error');
-                    isPlaying = false;
-                    isPaused = false;
-                    speakBtn.disabled = false;
-                    stopBtn.disabled = true;
-                    previousBtn.disabled = true;
-                    nextBtn.disabled = true;
-                    speakBtn.textContent = 'อ่าน';
+                    stopSpeech();
                 });
-                
+
                 currentAudio.onended = function() {
                     log(`Finished playing chunk ${currentIndex + 1}.`);
+                    
+                    const playedAudio = audioBuffer.get(currentIndex);
+                    if (playedAudio) {
+                        const url = playedAudio.src;
+                        if (url && url.startsWith('blob:')) {
+                            URL.revokeObjectURL(url);
+                            log(`Revoked blob URL for chunk ${currentIndex + 1}.`);
+                        }
+                        audioBuffer.delete(currentIndex);
+                    }
+
                     if (isPlaying && !isPaused) {
                         currentIndex++;
-                        
-                        // Preload chunks ถัดไปใน background
-                        if (preloadIndex < preloadQueue.length) {
-                            preloadNextBatch();
-                        }
-                        
                         playNext();
                     }
                 };
-                
+
                 currentAudio.onerror = function(e) {
                     log(`Audio element error for chunk ${currentIndex + 1}:`, e);
                     updateStatus('ไม่สามารถอ่านออกเสียงได้', 'error');
-                    isPlaying = false;
-                    isPaused = false;
-                    speakBtn.disabled = false;
-                    stopBtn.disabled = true;
-                    previousBtn.disabled = true;
-                    nextBtn.disabled = true;
-                    speakBtn.textContent = 'อ่าน';
+                    stopSpeech();
                 };
             }
             
@@ -1499,6 +1505,7 @@
             
             // ฟังก์ชันจบการเล่น
             function finishPlayback() {
+                log('Playback finished.');
                 isPlaying = false;
                 isPaused = false;
                 updateStatus('อ่านเสร็จแล้ว', 'success');
@@ -1509,7 +1516,6 @@
                 nextBtn.disabled = true;
                 speakBtn.textContent = 'อ่าน';
                 
-                // ทำเครื่องหมายว่ารายการที่เล่นเสร็จแล้ว
                 if (currentPlayingIds.length > 0) {
                     log(`Marking ${currentPlayingIds.length} playlist items as played.`);
                     currentPlayingIds.forEach(id => {
@@ -1521,20 +1527,25 @@
                     savePlaylist();
                 }
                 
+                // Clean up any remaining blob URLs from the buffer
+                log('Cleaning up audio buffer...');
+                for (const [index, audio] of audioBuffer.entries()) {
+                    if (audio instanceof Audio && audio.src && audio.src.startsWith('blob:')) {
+                        URL.revokeObjectURL(audio.src);
+                    }
+                }
+                audioBuffer.clear();
+
                 currentPlayingIds = [];
                 currentPlayingItemId = null;
-                preloadedChunks = [];
-                preloadQueue = [];
-                preloadIndex = 0;
                 currentAudio = null;
                 chunksForDisplay = [];
+                audioQueue = [];
                 
-                // Re-render playlist to update button states
                 if (playlistModal.style.display === 'flex') {
                     renderPlaylist();
                 }
 
-                // รีเซ็ต progress หลังจากเสร็จสิ้น
                 setTimeout(() => {
                     if (!isPlaying) {
                         progressBar.style.width = '0%';
@@ -1565,9 +1576,25 @@
                 }
 
                 try {
-                    stopSpeech();
+                    stopSpeech(); // Clear previous state
                     updateStatus('กำลังประมวลผล...', 'playing');
                     log('Processing text...');
+
+                    const chunks = splitTextIntoChunks(text);
+                    if (!chunks.length) {
+                        log('speakText failed: No chunks created from text.');
+                        return updateStatus('ไม่มีข้อความให้อ่าน', 'error');
+                    }
+                    
+                    const translatedChunks = await Promise.all(chunks.map(translateText));
+                    const finalChunks = translatedChunks.map(replaceCustomWords);
+                    log('Finished translating and replacing custom words.');
+
+                    chunksForDisplay = finalChunks;
+                    audioQueue = finalChunks; // Set the queue with TEXT chunks
+                    
+                    updateStatus(`พบ ${finalChunks.length} ส่วน กำลังเริ่มเล่น...`, 'playing');
+                    log(`Split text into ${finalChunks.length} chunks.`);
 
                     // Set the currently playing item ID(s)
                     currentPlayingIds = itemIds || [];
@@ -1576,46 +1603,6 @@
                     } else {
                         currentPlayingItemId = null; // No single item is active during 'Play All'
                     }
-
-                    const chunks = splitTextIntoChunks(text);
-                    if (!chunks.length) {
-                        log('speakText failed: No chunks created from text.');
-                        return updateStatus('ไม่มีข้อความให้อ่าน', 'error');
-                    }
-                    log(`Split text into ${chunks.length} chunks.`);
-
-                    const translatedChunks = await Promise.all(chunks.map(translateText));
-                    const finalChunks = translatedChunks.map(replaceCustomWords);
-                    log('Finished translating and replacing custom words.');
-
-                    const urls = [];
-                    log('Starting sequential audio generation...');
-                    for (let i = 0; i < finalChunks.length; i++) {
-                        const chunk = finalChunks[i];
-                        updateStatus(`กำลังสร้างเสียง... (${i + 1}/${finalChunks.length})`, 'playing');
-                        const url = await generateTTSUrl(chunk, i, finalChunks.length);
-                        if (url) {
-                            urls.push(url);
-                        } else {
-                            log(`Failed to generate audio for chunk ${i + 1}. Stopping.`);
-                            updateStatus(`ไม่สามารถสร้างเสียงสำหรับส่วนที่ ${i + 1} ได้`, 'error');
-                            urls.forEach(u => { if (u.startsWith('blob:')) URL.revokeObjectURL(u); });
-                            return; 
-                        }
-                    }
-                    audioQueue = urls;
-                    log('Finished audio generation. Audio queue created with ' + audioQueue.length + ' items.');
-
-                    if (audioQueue.length === 0) {
-                        log('speakText failed: Audio queue is empty after generation.');
-                        updateStatus('ไม่สามารถสร้างเสียงได้', 'error');
-                        return;
-                    }
-
-                    chunksForDisplay = finalChunks; // เก็บ chunks สำหรับแสดงใน live text
-                    
-                    // Preload audio elements
-                    preloadAudioElements();
 
                     isPlaying = true;
                     isPaused = false;
@@ -1626,33 +1613,30 @@
                     nextBtn.disabled = false;
                     speakBtn.textContent = 'กำลังอ่าน';
                     
-                    // Re-render playlist to show the 'Stop' button on the playing item
                     if (playlistModal.style.display === 'flex') {
                         renderPlaylist();
                     }
 
-                    log('Starting playback...');
-                    playNext();
+                    log('Kicking off playback and buffering...');
+                    fillAudioBuffer(); // Start filling the buffer
+                    playNext(); // Start the playback loop
+
                 } catch (error) {
                     log('speakText error:', error);
                     updateStatus('เกิดข้อผิดพลาด: ' + error.message, 'error');
-                    speakBtn.disabled = false;
-                    stopBtn.disabled = true;
-                    previousBtn.disabled = true;
-                    nextBtn.disabled = true;
-                    speakBtn.textContent = 'อ่าน';
+                    stopSpeech();
                 }
             }
             
             // ฟังก์ชันหยุดเสียง
             function stopSpeech() {
+                log('stopSpeech called. Halting all playback and cleaning up.');
                 isPlaying = false;
                 isPaused = false;
-                currentPlayingItemId = null;
-                currentPlayingIds = [];
                 
                 if (currentAudio) {
                     currentAudio.pause();
+                    currentAudio.onended = null; // Remove handler to prevent race conditions
                     currentAudio = null;
                 }
                 
@@ -1661,12 +1645,19 @@
                     previewAudio = null;
                 }
                 
+                // Clean up any blob URLs in the buffer
+                for (const [index, audio] of audioBuffer.entries()) {
+                    if (audio instanceof Audio && audio.src && audio.src.startsWith('blob:')) {
+                        URL.revokeObjectURL(audio.src);
+                    }
+                }
+                audioBuffer.clear();
+
                 audioQueue = [];
-                preloadedChunks = [];
-                preloadQueue = [];
-                preloadIndex = 0;
                 currentIndex = 0;
                 chunksForDisplay = [];
+                currentPlayingIds = [];
+                currentPlayingItemId = null;
                 
                 updateStatus('หยุดแล้ว', 'success');
                 speakBtn.disabled = false;
@@ -1676,7 +1667,6 @@
                 speakBtn.textContent = 'อ่าน';
                 progressBar.style.width = '0%';
 
-                // Re-render playlist to update button states
                 if (playlistModal.style.display === 'flex') {
                     renderPlaylist();
                 }
