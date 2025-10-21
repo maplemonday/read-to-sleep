@@ -3,471 +3,2280 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Text to Speech ด้วย Google Translate</title>
+    <title>Read to Sleep - Text to Speech</title>
     <style>
+        :root {
+            --bg-primary: #121212;
+            --bg-secondary: #1e1e1e;
+            --bg-tertiary: #2d2d2d;
+            --bg-quaternary: #3d3d3d;
+            --text-primary: #e0e0e0;
+            --text-secondary: #ccc;
+            --accent: #bb86fc;
+            --success: #03dac6;
+            --error: #cf6679;
+            --warning: #ffa000;
+            --info: #1e88e5;
+        }
+
+        /* Tab styles */
+        .tab-container {
+            margin-bottom: 20px;
+        }
+
+        .tab-buttons {
+            display: flex;
+            margin-bottom: 10px;
+            border-bottom: 1px solid #333;
+        }
+
+        .tab-btn {
+            padding: 10px 20px;
+            background-color: var(--bg-tertiary);
+            border: none;
+            border-radius: 8px 8px 0 0;
+            cursor: pointer;
+            margin-right: 5px;
+            color: var(--text-primary);
+            transition: all 0.3s ease;
+        }
+
+        .tab-btn:hover {
+            background-color: var(--bg-quaternary);
+        }
+
+        .tab-btn.active {
+            background-color: var(--accent);
+            color: var(--bg-primary);
+            font-weight: 500;
+        }
+
+        .tab-pane {
+            display: none;
+        }
+
+        .tab-pane.active {
+            display: block;
+        }
+
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
-        
+
         body {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             min-height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
             padding: 20px;
         }
-        
+
         .container {
-            background: white;
-            border-radius: 20px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-            padding: 40px;
             width: 100%;
-            max-width: 800px;
-            text-align: center;
+            max-width: 100%;
+            background-color: var(--bg-secondary);
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
         }
-        
+
         h1 {
-            color: #333;
-            margin-bottom: 10px;
-            font-size: 2.5rem;
-        }
-        
-        .subtitle {
-            color: #666;
+            text-align: center;
             margin-bottom: 30px;
-            font-size: 1.1rem;
+            font-weight: 300;
+            color: var(--accent);
+            font-size: 2.2rem;
         }
-        
+
         .input-group {
-            margin-bottom: 30px;
-            text-align: left;
+            margin-bottom: 25px;
         }
-        
+
         label {
             display: block;
-            margin-bottom: 10px;
-            color: #555;
-            font-weight: 500;
+            margin-bottom: 8px;
+            font-size: 1rem;
+            color: var(--text-secondary);
         }
-        
+
         textarea {
             width: 100%;
             height: 150px;
+            background-color: var(--bg-tertiary);
+            border: 1px solid #333;
+            border-radius: 8px;
             padding: 15px;
-            border: 2px solid #e1e5e9;
-            border-radius: 10px;
+            color: var(--text-primary);
             font-size: 1rem;
             resize: vertical;
             transition: border-color 0.3s;
         }
-        
+
         textarea:focus {
             outline: none;
-            border-color: #667eea;
+            border-color: var(--accent);
         }
-        
+
         .controls {
             display: flex;
             gap: 15px;
-            margin-bottom: 30px;
+            margin-bottom: 25px;
             flex-wrap: wrap;
         }
-        
-        select, button {
-            padding: 12px 20px;
-            border: none;
-            border-radius: 8px;
-            font-size: 1rem;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-        
-        select {
-            flex: 1;
-            background: #f8f9fa;
-            border: 2px solid #e1e5e9;
-            color: #333;
-        }
-        
+
         button {
-            background: #667eea;
-            color: white;
-            font-weight: 600;
-            min-width: 120px;
+            background-color: var(--accent);
+            color: var(--bg-primary);
+            border: 1px solid #444;
+            border-radius: 8px;
+            padding: 16px 12px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            flex: 1;
+            min-width: 80px;
         }
-        
+
         button:hover {
-            background: #5a6fd8;
+            background-color: #9a67ea;
             transform: translateY(-2px);
         }
-        
+
         button:active {
             transform: translateY(0);
         }
-        
+
         button:disabled {
-            background: #ccc;
+            background-color: #444;
             cursor: not-allowed;
             transform: none;
         }
-        
-        .speed-control {
-            display: flex;
+
+        /* ปุ่มที่ใช้โครงสร้างเดียวกับ ai-button */
+        .speak-btn,
+        .word-btn,
+        .playlist-btn,
+        .add-to-playlist-btn,
+        .clear-btn,
+        .paste-btn,
+        .ai-btn,
+        .stop-btn,
+        .previous-btn,
+        .next-btn {
+            background: var(--bg-tertiary);
+            border: 1px solid #444;
+            color: var(--text-primary);
+            padding: 8px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.2s ease;
+            min-width: 80px;
+            text-align: center;
+        }
+
+        .speak-btn:hover,
+        .word-btn:hover,
+        .playlist-btn:hover,
+        .add-to-playlist-btn:hover,
+        .clear-btn:hover,
+        .paste-btn:hover,
+        .ai-btn:hover,
+        .stop-btn:hover,
+        .previous-btn:hover,
+        .next-btn:hover {
+            background: var(--bg-quaternary);
+            border-color: var(--accent);
+        }
+
+        .status {
+            display: flex; /* เปิดการใช้ flex */
+            align-items: center; /* จัดกึ่งกลางแนวตั้ง */
+            justify-content: center; /* จัดกึ่งกลางแนวนอน */
+            text-align: center;
+            padding: 20px;
+            border-radius: 8px;
+            background-color: var(--bg-tertiary);
+            font-size: 18px;
+            margin-top: 10px;
+            overflow: hidden;
+            min-height: 100px;
+        }
+
+        .playing {
+            color: var(--success);
+        }
+
+        .error {
+            color: var(--error);
+        }
+
+        .success {
+            color: var(--success);
+        }
+
+        .progress {
+            height: 4px;
+            background-color: #333;
+            border-radius: 2px;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background-color: var(--accent);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            justify-content: center;
             align-items: center;
-            gap: 15px;
-            margin-bottom: 30px;
+        }
+
+        .modal-content {
+            background-color: var(--bg-secondary);
+            border-radius: 16px;
+            padding: 30px;
+            width: 90%;
+            max-width: 700px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-header h2 {
+            color: var(--accent);
+            margin: 0;
+        }
+
+        .close {
+            font-size: 2rem;
+            cursor: pointer;
+            color: var(--text-primary);
+        }
+
+        .close:hover {
+            color: var(--accent);
+        }
+
+        .modal-body {
+            margin-bottom: 25px;
+        }
+
+        .custom-words {
+            width: 100%;
+            height: 200px;
+            background-color: var(--bg-tertiary);
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 15px;
+            color: var(--text-primary);
+            font-size: 1rem;
+            resize: vertical;
+            margin-bottom: 15px;
+        }
+
+        .file-input {
+            margin-bottom: 15px;
+        }
+
+        .preview-section {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: var(--bg-tertiary);
+            border-radius: 8px;
+
+            display: flex;              /* เพิ่ม flex */
+            align-items: center;        /* จัดให้อยู่กึ่งกลางแนวตั้ง */
+            gap: 10px;                  /* ช่องว่างระหว่าง input กับ button */
+        }
+
+        .preview-input {
+            flex: 1;                    /* ให้ input ขยายพื้นที่ */
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid #333;
+            background-color: var(--bg-quaternary);
+            color: var(--text-primary);
+            margin-bottom: 0;           /* ลบ margin-bottom เดิมออก */
+        }
+
+        .preview-btn {
+            background-color: var(--success);
+            color: var(--bg-primary);
+            border: none;
+            border-radius: 8px;
+            padding: 10px 12px; /* ปรับ padding แนวนอนให้เล็กลง */
+            font-size: 1rem;
+            font-weight: 500;
+            width: auto;         /* ให้กว้างตามเนื้อหา */
+            white-space: nowrap; /* ป้องกันไม่ให้ขึ้นบรรทัดใหม่ */
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .preview-btn:hover {
+            background-color: #00b3a0;
+        }
+
+        .preview-btn:disabled {
+            background-color: #444;
+            cursor: not-allowed;
+        }
+
+        /* Playlist Styles */
+        .playlist-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            background-color: var(--bg-tertiary);
+            border-radius: 8px;
+            margin-bottom: 10px;
+            transition: background-color 0.3s ease;
+        }
+
+        .playlist-item.played {
+            background-color: var(--bg-quaternary);
+            opacity: 0.7;
+        }
+
+        .playlist-item button {
+            padding: 5px 10px;
+            min-width: auto;
+            font-size: 0.9rem;
+        }
+
+        .playlist-number {
+            font-weight: bold;
+            color: var(--accent);
+            margin-right: 10px;
+            min-width: 30px;
+        }
+
+        .playlist-title {
+            flex: 1;
+            margin-right: 10px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .playlist-actions {
+            display: flex;
+            gap: 5px;
+        }
+
+        .play-btn {
+            background-color: var(--success);
+            padding: 5px 10px;
+        }
+
+        .delete-btn {
+            background-color: var(--error);
+            padding: 5px 10px;
+        }
+
+        .unread-btn {
+            background-color: var(--warning);
+            padding: 5px 10px;
+        }
+
+        .playlist-input {
+            width: 100%;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid #333;
+            background-color: var(--bg-quaternary);
+            color: var(--text-primary);
+            margin-bottom: 15px;
+        }
+
+        .empty-playlist {
+            text-align: center;
+            padding: 20px;
+            color: var(--text-secondary);
+        }
+
+        .play-all-section {
+            margin-bottom: 20px;
+            text-align: center;
+            display: flex;
+            gap: 10px;
             justify-content: center;
         }
-        
-        .speed-value {
-            background: #667eea;
-            color: white;
-            padding: 5px 15px;
-            border-radius: 20px;
-            font-weight: 600;
-        }
-        
-        .status {
-            padding: 15px;
-            border-radius: 8px;
-            margin-top: 20px;
-            font-weight: 500;
-        }
-        
-        .status.success {
-            background: #d4edda;
-            color: #155724;
-        }
-        
-        .status.error {
-            background: #f8d7da;
-            color: #721c24;
-        }
-        
-        .status.warning {
-            background: #fff3cd;
-            color: #856404;
-        }
-        
-        .example-text {
-            background: #f8f9fa;
-            padding: 20px;
-            border-radius: 10px;
-            margin-top: 30px;
-            text-align: left;
-        }
-        
-        .example-text h3 {
-            color: #555;
-            margin-bottom: 15px;
-        }
-        
-        .example-text p {
-            color: #666;
-            line-height: 1.6;
-        }
-        
-        .log-container {
-            background: #f8f9fa;
-            border-radius: 10px;
-            padding: 20px;
-            margin-top: 30px;
-            text-align: left;
-        }
-        
-        .log-container h3 {
-            color: #555;
-            margin-bottom: 15px;
-        }
-        
-        .log-content {
-            background: #2d3748;
-            color: #e2e8f0;
-            padding: 15px;
-            border-radius: 8px;
-            height: 200px;
-            overflow-y: auto;
-            font-family: 'Courier New', monospace;
-            font-size: 0.9rem;
-        }
-        
-        .log-entry {
-            margin-bottom: 8px;
-        }
-        
-        .log-timestamp {
-            color: #68d391;
-        }
-        
-        .log-info {
-            color: #63b3ed;
-        }
-        
-        .log-warning {
-            color: #f6e05e;
-        }
-        
-        .log-error {
-            color: #fc8181;
-        }
-        
-        .clear-log-btn {
-            background: #e53e3e;
-            color: white;
-            padding: 8px 15px;
+
+        .play-all-btn {
+            background-color: var(--success);
+            color: var(--bg-primary);
             border: none;
-            border-radius: 5px;
+            border-radius: 8px;
+            padding: 10px 20px;
+            font-size: 1rem;
+            font-weight: 500;
             cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .play-all-btn:hover {
+            background-color: #00b3a0;
+        }
+
+        .play-all-btn:disabled {
+            background-color: #444;
+            cursor: not-allowed;
+        }
+
+        .clear-all-btn {
+            background-color: var(--error);
+            color: var(--bg-primary);
+            border: none;
+            border-radius: 8px;
+            padding: 10px 20px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .clear-all-btn:hover {
+            background-color: #b05060;
+        }
+
+        .clear-all-btn:disabled {
+            background-color: #444;
+            cursor: not-allowed;
+        }
+
+        .sort-btn {
+            background-color: #6200ee;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            padding: 10px 20px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-left: 10px;
+        }
+
+        .sort-btn:hover {
+            background-color: #3700b3;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        /* AI Section Styles */
+        .ai-block {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+            margin-top: 20px;
+            padding: 15px;
+            background-color: var(--bg-tertiary);
+            border-radius: 8px;
+        }
+
+        .ai-input-container {
+            position: relative;
+            flex: 3;
+            min-width: 150px;
+        }
+
+        .ai-input {
+            width: 100%;
+            background: var(--bg-tertiary);
+            border: 1px solid #444;
+            border-radius: 8px;
+            color: var(--text-primary);
+            padding: 8px 30px 8px 8px;
+            font-size: 13px;
+        }
+
+        .ai-input:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        .api-status {
+            position: absolute;
+            right: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background-color: #666;
+        }
+
+        .api-status.ok {
+            background-color: var(--success);
+        }
+
+        .ai-model-select {
+            background: var(--bg-tertiary);
+            border: 1px solid #444;
+            border-radius: 8px;
+            color: var(--text-primary);
+            padding: 8px;
+            font-size: 13px;
+            flex: 2;
+            min-width: 120px;
+        }
+
+        .ai-model-select:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        .ai-model-select:disabled {
+            background: var(--bg-quaternary);
+            color: var(--text-secondary);
+        }
+
+        .ai-buttons {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            width: 100%;
             margin-top: 10px;
-            font-size: 0.9rem;
         }
-        
-        .clear-log-btn:hover {
-            background: #c53030;
+
+        .ai-button {
+            background: var(--bg-tertiary);
+            border: 1px solid #444;
+            color: var(--text-primary);
+            padding: 8px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.2s ease;
+            min-width: 80px;
+            text-align: center;
         }
-        
+
+        .ai-button:hover {
+            background: var(--bg-quaternary);
+            border-color: var(--accent);
+        }
+
+        .ai-button.active {
+            background: var(--accent);
+            border-color: var(--accent);
+        }
+
+        .ai-button:disabled {
+            background: #666;
+            cursor: not-allowed;
+        }
+
+        .prompt-textarea {
+            width: 100%;
+            height: 200px;
+            background-color: var(--bg-tertiary);
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 15px;
+            color: var(--text-primary);
+            font-size: 1rem;
+            resize: vertical;
+            margin-bottom: 15px;
+        }
+
+        .prompt-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+
+        .reset-prompt-btn {
+            background-color: var(--error);
+            color: var(--bg-primary);
+            border: none;
+            border-radius: 8px;
+            padding: 10px 20px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .reset-prompt-btn:hover {
+            background-color: #b05060;
+        }
+
         @media (max-width: 600px) {
             .container {
                 padding: 20px;
+            }
+            
+            h1 {
+                font-size: 1.8rem;
             }
             
             .controls {
                 flex-direction: column;
             }
             
-            button, select {
+            .modal-content {
+                padding: 20px;
+            }
+            
+            .playlist-item {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .playlist-actions {
                 width: 100%;
+                justify-content: flex-end;
+                margin-top: 10px;
+            }
+            
+            .play-all-section {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .button-group {
+                flex-direction: column;
+            }
+            
+            .ai-block {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .ai-input-container, .ai-model-select {
+                width: 100%;
+            }
+            
+            .prompt-buttons {
+                flex-direction: column;
             }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Text to Speech</h1>
-        <p class="subtitle">แปลงข้อความเป็นเสียงพูดด้วย Google Translate</p>
+        <h1>Read to Sleep</h1>
         
         <div class="input-group">
-            <label for="text">ใส่ข้อความที่ต้องการอ่านออกเสียง:</label>
-            <textarea id="text" placeholder="พิมพ์ข้อความที่นี่...">สวัสดีครับ นี่คือตัวอย่างการอ่านออกเสียงด้วยความเร็ว 1.35 เท่าของความเร็วปกติ</textarea>
+            <label for="text">เนื้อเรื่อง:</label>
+            <textarea id="text" placeholder="ข้อความที่ต้องการให้อ่านออกเสียง..."></textarea>
         </div>
         
         <div class="controls">
-            <select id="language">
-                <option value="th">ไทย</option>
-                <option value="en">English</option>
-                <option value="ja">日本語</option>
-                <option value="ko">한국어</option>
-                <option value="zh-CN">中文</option>
-                <option value="es">Español</option>
-                <option value="fr">Français</option>
-                <option value="de">Deutsch</option>
+            <button id="speakBtn">อ่าน</button>
+            <button id="stopBtn" class="stop-btn" disabled>ยกเลิก</button>
+            <button id="previousBtn" class="previous-btn" disabled>ก่อนหน้า</button>
+            <button id="nextBtn" class="next-btn" disabled>ถัดไป</button>
+            <button id="pasteBtn" class="paste-btn">วางข้อความ</button>
+            <button id="clearBtn" class="clear-btn">ล้างข้อความ</button>
+            <button id="wordBtn" class="word-btn">Custom Word</button>
+            <button id="addToPlaylistMainBtn" class="add-to-playlist-btn">เพิ่ม Playlist</button>
+            <button id="playlistBtn" class="playlist-btn">Playlist</button>
+        </div>
+
+        <!-- AI Section with new layout -->
+        <div class="ai-block">
+            <div class="ai-input-container">
+                <input type="password" id="apiKey" class="ai-input" placeholder="API Key">
+                <div id="apiStatus" class="api-status ok"></div>
+            </div>
+            <select id="modelSelect" class="ai-model-select">
+                <option value="gemini-2.5-flash">gemini-2.5-flash</option>
+                <option value="gemini-2.0-flash">gemini-2.0-flash</option>
+                <option value="gemini-1.5-flash">gemini-1.5-flash</option>
+                <option value="gemini-1.5-pro">gemini-1.5-pro</option>
+                <option value="gemini-1.0-pro">gemini-1.0-pro</option>
             </select>
-            <button id="speakBtn">อ่านออกเสียง</button>
-            <button id="stopBtn" disabled>หยุด</button>
+            <div class="ai-buttons">
+                <button id="aiEditBtn" class="ai-button">AI จัดคำ</button>
+                <button id="aiSummarizeBtn" class="ai-button">AI สรุป</button>
+                <button id="aiMyStyleBtn" class="ai-button">AI สั้น</button>
+                <button id="promptBtn" class="ai-button">Prompt</button>
+            </div>
+        </div>
+
+        <div class="progress">
+            <div id="progressBar" class="progress-bar"></div>
+        </div>
+
+        <div id="status" class="status">
+            ป้อนข้อความเพื่อเริ่มต้น
         </div>
         
-        <div class="speed-control">
-            <span>ความเร็ว:</span>
-            <span class="speed-value">1.35x</span>
+    </div>
+
+    <!-- Custom Words Modal -->
+    <div id="wordModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Custom Words</h2>
+                <span class="close">&times;</span>
+            </div>
+            <div class="modal-body">
+                <!-- <p>กำหนดคำที่ต้องการแทนที่ในรูปแบบ: คำเดิม;คำใหม่ (หนึ่งคู่ต่อหนึ่งบรรทัด)</p> -->
+                <textarea id="customWords" class="custom-words" placeholder="ตัวอย่าง:
+กรุงเทพฯ;กรุงเทพมหานคร
+รพ.;โรงพยาบาล
+ดร.;ดอกเตอร์"></textarea>
+                
+                <div class="file-input">
+                    <input type="file" id="importFile" accept=".txt">
+                    <button id="importBtn">นำเข้าจากไฟล์</button>
+                </div>
+                
+                <div class="button-group">
+                    <button id="saveWordsBtn">บันทึก</button>
+                    <button id="sortWordsBtn" class="sort-btn">Sort</button>
+                </div>
+                
+                <div class="preview-section">
+                    <!-- <h3>ทดสอบเสียง</h3> -->
+                    <input type="text" id="previewText" class="preview-input" placeholder="พิมพ์ข้อความเพื่อทดสอบเสียง...">
+                    <button id="previewBtn" class="preview-btn">ทดสอบเสียง</button>
+                    <!-- <div id="previewStatus" class="status">ป้อนข้อความเพื่อทดสอบ</div> -->
+                </div>
+            </div>
         </div>
-        
-        <div id="status" class="status" style="display: none;"></div>
-        
-        <div class="example-text">
-            <h3>ตัวอย่างการใช้งาน:</h3>
-            <p>ระบบจะใช้ Google Translate เพื่ออ่านออกเสียงข้อความที่คุณป้อน โดยมีความเร็วในการอ่านที่ 1.35 เท่าของความเร็วปกติ ซึ่งเร็วกว่าปกติเล็กน้อยเพื่อให้การฟังมีประสิทธิภาพมากขึ้น</p>
+    </div>
+
+    <!-- Playlist Modal -->
+    <div id="playlistModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Playlist</h2>
+                <span class="close">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="play-all-section">
+                    <button id="playAllBtn" class="play-all-btn">Play All Unplayed</button>
+                    <button id="clearAllBtn" class="clear-all-btn">Clear All List</button>
+                </div>
+                <div id="playlistItems">
+                    <div class="empty-playlist">ไม่มีรายการใน Playlist</div>
+                </div>
+            </div>
         </div>
-        
-        <div class="log-container">
-            <h3>ระบบตรวจสอบการทำงาน (Log)</h3>
-            <div id="logContent" class="log-content"></div>
-            <button id="clearLogBtn" class="clear-log-btn">ล้าง Log</button>
+    </div>
+
+    <!-- Prompt Modal -->
+    <div id="promptModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>ปรับแต่ง Prompt</h2>
+                <span class="close">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="tab-container">
+                    <div class="tab-buttons">
+                        <button class="tab-btn active" data-tab="edit-tab">AI จัดคำ</button>
+                        <button class="tab-btn" data-tab="summarize-tab">AI สรุป</button>
+                        <button class="tab-btn" data-tab="mystyle-tab">AI สั้น</button>
+                    </div>
+                    
+                    <div class="tab-content">
+                        <div id="edit-tab" class="tab-pane active">
+                            <textarea id="editPrompt" class="prompt-textarea"></textarea>
+                        </div>
+                        <div id="summarize-tab" class="tab-pane">
+                            <textarea id="summarizePrompt" class="prompt-textarea"></textarea>
+                        </div>
+                        <div id="mystyle-tab" class="tab-pane">
+                            <textarea id="mystylePrompt" class="prompt-textarea"></textarea>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="prompt-buttons">
+                    <button id="resetPromptsBtn" class="reset-prompt-btn">ล้าง Prompt</button>
+                    <button id="savePromptsBtn">บันทึก Prompt</button>
+                </div>
+            </div>
         </div>
     </div>
 
     <script>
+        // Tab switching functionality
+        function setupTabs() {
+            const tabBtns = document.querySelectorAll('.tab-btn');
+            const tabPanes = document.querySelectorAll('.tab-pane');
+
+            tabBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    // Remove active class from all buttons and panes
+                    tabBtns.forEach(b => b.classList.remove('active'));
+                    tabPanes.forEach(p => p.classList.remove('active'));
+
+                    // Add active class to clicked button and corresponding pane
+                    btn.classList.add('active');
+                    const tabId = btn.getAttribute('data-tab');
+                    document.getElementById(tabId).classList.add('active');
+                });
+            });
+        }
+
+        // Simple Thai word segmentation function
+        function simpleThaiSegment(text) {
+            // This is a simplified version - in a real application, you would use a proper Thai segmentation library
+            const words = [];
+            let currentWord = '';
+            
+            for (let i = 0; i < text.length; i++) {
+                const char = text[i];
+                // Check if character is Thai
+                if (/[\u0E00-\u0E7F]/.test(char)) {
+                    currentWord += char;
+                } else if (/\s/.test(char)) {
+                    if (currentWord) {
+                        words.push(currentWord);
+                        currentWord = '';
+                    }
+                } else {
+                    // Non-Thai characters (English, numbers, etc.)
+                    if (currentWord) {
+                        words.push(currentWord);
+                        currentWord = '';
+                    }
+                    words.push(char);
+                }
+            }
+            
+            if (currentWord) {
+                words.push(currentWord);
+            }
+            
+            return words;
+        }
+
         document.addEventListener('DOMContentLoaded', function() {
-            const textArea = document.getElementById('text');
-            const languageSelect = document.getElementById('language');
+            const log = (message, ...args) => console.log('[TTS]', message, ...args);
+            log('Application initialized.');
+
+            setupTabs();
+            
+            const textInput = document.getElementById('text');
             const speakBtn = document.getElementById('speakBtn');
             const stopBtn = document.getElementById('stopBtn');
+            const previousBtn = document.getElementById('previousBtn');
+            const nextBtn = document.getElementById('nextBtn');
+            const clearBtn = document.getElementById('clearBtn');
+            const pasteBtn = document.getElementById('pasteBtn');
+            const addToPlaylistMainBtn = document.getElementById('addToPlaylistMainBtn');
+            const wordBtn = document.getElementById('wordBtn');
+            const playlistBtn = document.getElementById('playlistBtn');
             const statusDiv = document.getElementById('status');
-            const logContent = document.getElementById('logContent');
-            const clearLogBtn = document.getElementById('clearLogBtn');
+            const progressBar = document.getElementById('progressBar');
             
-            let audio = null;
+            // AI Elements
+            const apiKeyInput = document.getElementById('apiKey');
+            const modelSelect = document.getElementById('modelSelect');
+            const apiStatus = document.getElementById('apiStatus');
+            const aiEditBtn = document.getElementById('aiEditBtn');
+            const aiSummarizeBtn = document.getElementById('aiSummarizeBtn');
+            const aiMyStyleBtn = document.getElementById('aiMyStyleBtn');
+            const promptBtn = document.getElementById('promptBtn');
+            
+            // Modal elements
+            const wordModal = document.getElementById('wordModal');
+            const playlistModal = document.getElementById('playlistModal');
+            const promptModal = document.getElementById('promptModal');
+            const closeButtons = document.querySelectorAll('.close');
+            const customWordsTextarea = document.getElementById('customWords');
+            const saveWordsBtn = document.getElementById('saveWordsBtn');
+            const importFileInput = document.getElementById('importFile');
+            const importBtn = document.getElementById('importBtn');
+            const previewText = document.getElementById('previewText');
+            const previewBtn = document.getElementById('previewBtn');
+            const previewStatus = document.getElementById('previewStatus');
+            const sortWordsBtn = document.getElementById('sortWordsBtn');
+            
+            // Prompt Modal Elements
+            const editPromptTextarea = document.getElementById('editPrompt');
+            const summarizePromptTextarea = document.getElementById('summarizePrompt');
+            const mystylePromptTextarea = document.getElementById('mystylePrompt');
+            const savePromptsBtn = document.getElementById('savePromptsBtn');
+            const resetPromptsBtn = document.getElementById('resetPromptsBtn');
+            
+            // Playlist elements
+            const playlistItems = document.getElementById('playlistItems');
+            const playAllBtn = document.getElementById('playAllBtn');
+            const clearAllBtn = document.getElementById('clearAllBtn');
+            
+            let audioQueue = [];
+            let audioElements = [];
             let isPlaying = false;
+            let isPaused = false;
+            let currentIndex = 0;
+            let previewAudio = null;
+            let customWords = {};
+            let playlist = [];
+            let currentPlayingIds = []; // This is for 'Play All', should be renamed or refactored.
+            let currentPlayingItemId = null; // Tracks the single item playing from the playlist
+            let preloadedChunks = []; // เก็บ audio elements ที่ preloaded
+            let preloadQueue = []; // คิวสำหรับ preloading
+            let preloadIndex = 0; // index สำหรับ preloading
+            let currentAudio = null; // ตัวแปรเก็บ audio ปัจจุบัน
+            let chunksForDisplay = []; // เก็บ chunks สำหรับแสดงใน live text
+            let isLocalProxyAvailable = true; // Assume local proxy is available by default
             
-            // ฟังก์ชันเพิ่ม log
-            function addLog(message, type = 'info') {
-                const timestamp = new Date().toLocaleTimeString();
-                const logEntry = document.createElement('div');
-                logEntry.className = 'log-entry';
-                logEntry.innerHTML = `<span class="log-timestamp">[${timestamp}] ${message}`;
-                logContent.appendChild(logEntry);
-                logContent.scrollTop = logContent.scrollHeight;
+            // Default prompts
+            const defaultPrompts = {
+                edit: `กรุณาช่วยจัดรูปแบบข้อความนิยายจีนให้เป็น style การเล่านิยายจีนเรื่อง "กระบี่​จง​มา/​剑来/Jian Lai/SwordComing" ดังนี้:                 
+1. แบ่งข้อความเป็นประโยคยืดหยุ่น (grammar-aware chunks) โดยไม่กำหนดจำนวนคำตายตัว
+2. ตรวจและแก้ไขคำผิด (grammar correction)
+3. แบ่งวรรค (punctuation-aware chunking) ให้ถูกต้อง
+4. จำกัดความยาว chunk ไม่เกิน 170 ตัวอักษร ตามความเหมาะสม
+5. แก้ไขปัญหาการตัดคำผิดพลาด และประโยคยาวเกินไป
+6. ป้องกันการตัดคำกลางประโยคที่ทำให้ความหมายเปลี่ยน
+7. ต้องลบสัญลักษณ์ เช่น ? " ... ! * ( ) ฯลฯ อื่นๆ ที่จะทำให้ google translate อ่านผิด ตีความผิด โดยให้คงข้อความเดิมไว้
+8. รักษาภาษาต้นฉบับไว้ พร้อมทั้งเว้นวรรคให้เหมาะสมกับการอ่าน
+6. ให้เริ่มเรื่องเลย ไม่ต้องทวนคำถาม
+
+ข้อความที่ต้องประมวลผล:`,
+                summarize: `กรุณาช่วยเรียบเรียงใหม่และเล่าแบบสรุปความของข้อความนิยายจีนเรื่อง "กระบี่​จง​มา/​剑来/Jian Lai/SwordComing" ให้ครบถ้วนและละเอียด โดย:
+1. สรุปเนื้อหาสำคัญทั้งหมดโดยละเอียด
+2. รักษาลำดับเหตุการณ์และความต่อเนื่อง
+3. ใช้ภาษาที่เข้าใจง่ายและเหมาะสมกับการอ่านออกเสียง
+4. แบ่งเป็นประโยคสั้นๆ ที่เหมาะสมกับการอ่าน
+5. รักษาความเป็นนิยายไว้
+6. ให้เริ่มเรื่องเลย ไม่ต้องทวนคำถาม
+
+ข้อความที่ต้องสรุป:`,
+                mystyle: `กรุณาช่วยเรียบเรียงใหม่และเล่าแบบสรุปความของข้อความนิยายจีนเรื่อง "กระบี่​จง​มา/​剑来/Jian Lai/SwordComing" ให้ครบถ้วน โดย:
+1. สรุปเนื้อหาสำคัญทั้งหมดแบบสั้นๆ
+2. รักษาลำดับเหตุการณ์และความต่อเนื่อย (who what where how why)
+3. ใช้ภาษาที่เข้าใจง่ายและเหมาะสมกับการอ่านออกเสียง
+4. แบ่งเป็นประโยคสั้นๆ ที่เหมาะสมกับการอ่าน
+5. รักษาความเป็นนิยายไว้
+6. ให้เริ่มเรื่องเลย ไม่ต้องทวนคำถาม
+
+ข้อความที่ต้องประมวลผล:`
+            };
+            
+            let prompts = {...defaultPrompts};
+            
+            // โหลด prompts จาก localStorage
+            function loadPrompts() {
+                try {
+                    const saved = localStorage.getItem('aiPrompts');
+                    if (saved) {
+                        prompts = JSON.parse(saved);
+                    }
+                } catch (e) {
+                    console.error('Error loading prompts:', e);
+                }
+                updatePromptTextareas();
             }
             
-            // ฟังก์ชันล้าง log
-            function clearLog() {
-                logContent.innerHTML = '';
-                addLog('Log ถูกล้างเรียบร้อยแล้ว', 'info');
+            // บันทึก prompts ลง localStorage
+            function savePrompts() {
+                try {
+                    prompts.edit = editPromptTextarea.value;
+                    prompts.summarize = summarizePromptTextarea.value;
+                    prompts.mystyle = mystylePromptTextarea.value;
+                    localStorage.setItem('aiPrompts', JSON.stringify(prompts));
+                    updateStatus('บันทึก Prompt เรียบร้อยแล้ว', 'success');
+                } catch (e) {
+                    updateStatus('เกิดข้อผิดพลาดในการบันทึก Prompt', 'error');
+                }
             }
             
+            // รีเซ็ต prompts เป็นค่า default
+            function resetPrompts() {
+                prompts = {...defaultPrompts};
+                updatePromptTextareas();
+                updateStatus('รีเซ็ต Prompt เป็นค่าเริ่มต้นแล้ว', 'success');
+            }
+            
+            // อัปเดต textarea ด้วย prompts
+            function updatePromptTextareas() {
+                editPromptTextarea.value = prompts.edit;
+                summarizePromptTextarea.value = prompts.summarize;
+                mystylePromptTextarea.value = prompts.mystyle;
+            }
+            
+            // ตรวจสอบ API Key
+            function checkApiKey() {
+                const apiKey = apiKeyInput.value.trim();
+                if (apiKey) {
+                    apiStatus.className = 'api-status ok';
+                    apiKeyInput.classList.add('valid-input');
+                    apiKeyInput.classList.remove('invalid-input');
+                } else {
+                    apiStatus.className = 'api-status';
+                    apiKeyInput.classList.remove('valid-input');
+                    apiKeyInput.classList.remove('invalid-input');
+                }
+            }
+            
+            // โหลด API Key จาก localStorage
+            function loadApiKey() {
+                try {
+                    const savedApiKey = localStorage.getItem('geminiApiKey');
+                    if (savedApiKey) {
+                        apiKeyInput.value = savedApiKey;
+                        checkApiKey();
+                    }
+                } catch (e) {
+                    console.error('Error loading API key:', e);
+                }
+            }
+            
+            // บันทึก API Key ลง localStorage
+            function saveApiKey() {
+                try {
+                    const apiKey = apiKeyInput.value.trim();
+                    if (apiKey) {
+                        localStorage.setItem('geminiApiKey', apiKey);
+                    } else {
+                        localStorage.removeItem('geminiApiKey');
+                    }
+                } catch (e) {
+                    console.error('Error saving API key:', e);
+                }
+            }
+            
+            // โหลด custom words จาก localStorage
+            function loadCustomWords() {
+                try {
+                    const saved = localStorage.getItem('customWords');
+                    if (saved) {
+                        customWords = JSON.parse(saved);
+                        updateCustomWordsTextarea();
+                    }
+                } catch (e) {
+                    console.error('Error loading custom words:', e);
+                }
+            }
+            
+            // โหลด playlist จาก localStorage
+            function loadPlaylist() {
+                try {
+                    const saved = localStorage.getItem('ttsPlaylist');
+                    if (saved) {
+                        playlist = JSON.parse(saved);
+                    }
+                } catch (e) {
+                    console.error('Error loading playlist:', e);
+                }
+                updatePlaylistButton();
+            }
+            
+            // บันทึก playlist ลง localStorage
+            function savePlaylist() {
+                try {
+                    localStorage.setItem('ttsPlaylist', JSON.stringify(playlist));
+                } catch (e) {
+                    console.error('Error saving playlist:', e);
+                }
+                updatePlaylistButton();
+            }
+            
+            // อัปเดตปุ่ม Playlist ให้แสดงจำนวนรายการ
+            function updatePlaylistButton() {
+                if (playlist.length > 0) {
+                    playlistBtn.textContent = `Playlist [${playlist.length}]`;
+                } else {
+                    playlistBtn.textContent = 'Playlist';
+                }
+            }
+            
+            // อัปเดต textarea ด้วย custom words
+            function updateCustomWordsTextarea() {
+                let text = '';
+                for (const [oldWord, newWord] of Object.entries(customWords)) {
+                    text += `${oldWord};${newWord}\n`;
+                }
+                customWordsTextarea.value = text;
+            }
+            
+            // บันทึก custom words ลง localStorage
+            function saveCustomWords() {
+                try {
+                    const lines = customWordsTextarea.value.trim().split('\n');
+                    customWords = {};
+                    
+                    for (const line of lines) {
+                        if (line.trim()) {
+                            const parts = line.split(';');
+                            if (parts.length === 2) {
+                                const oldWord = parts[0].trim();
+                                const newWord = parts[1].trim();
+                                if (oldWord && newWord) {
+                                    customWords[oldWord] = newWord;
+                                }
+                            }
+                        }
+                    }
+                    
+                    localStorage.setItem('customWords', JSON.stringify(customWords));
+                    updateStatus('บันทึกคำที่กำหนดเองเรียบร้อยแล้ว', 'success');
+                } catch (e) {
+                    updateStatus('เกิดข้อผิดพลาดในการบันทึก', 'error');
+                }
+            }
+            
+            // ฟังก์ชันเรียงลำดับคำ
+            function sortCustomWords() {
+                try {
+                    const lines = customWordsTextarea.value.trim().split('\n');
+                    const wordPairs = [];
+                    
+                    for (const line of lines) {
+                        if (line.trim()) {
+                            const parts = line.split(';');
+                            if (parts.length === 2) {
+                                const oldWord = parts[0].trim();
+                                const newWord = parts[1].trim();
+                                if (oldWord && newWord) {
+                                    wordPairs.push({ old: oldWord, new: newWord });
+                                }
+                            }
+                        }
+                    }
+                    
+                    // เรียงลำดับตามคำเดิม
+                    wordPairs.sort((a, b) => a.old.localeCompare(b.old));
+                    
+                    // สร้างข้อความใหม่
+                    let sortedText = '';
+                    wordPairs.forEach(pair => {
+                        sortedText += `${pair.old};${pair.new}\n`;
+                    });
+                    
+                    customWordsTextarea.value = sortedText;
+                    updateStatus('เรียงลำดับคำเรียบร้อยแล้ว', 'success');
+                } catch (e) {
+                    updateStatus('เกิดข้อผิดพลาดในการเรียงลำดับ', 'error');
+                }
+            }
+            
+            // แทนที่คำตาม custom words - เวอร์ชันที่ปรับปรุงแล้ว
+            function replaceCustomWords(text) {
+                // จัดเรียงคำจากยาวไปสั้นเพื่อป้องกันการแทนที่ผิดพลาด
+                const sortedWords = Object.entries(customWords)
+                    .sort((a, b) => b[0].length - a[0].length);
+                
+                // ใช้ regex ที่ถูกต้องเพื่อแทนที่คำทั้งหมด
+                let result = text;
+                
+                for (const [oldWord, newWord] of sortedWords) {
+                    // สร้าง regex ที่ตรวจจับคำทั้งหมด (case-sensitive)
+                    // โดยใช้ word boundaries (\b) สำหรับภาษาไทยจะใช้ \s หรือตัวอักษรจีน
+                    const escapedOldWord = oldWord.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                    const regex = new RegExp(escapedOldWord, 'g');
+                    result = result.replace(regex, newWord);
+                }
+                
+                return result;
+            }
+            
+            function splitTextIntoChunks(text, maxLen = 120) {
+                if (!text) return [];
+
+                const chunks = [];
+                let i = 0;
+                while (i < text.length) {
+                    let chunk;
+                    if (i + maxLen >= text.length) {
+                        chunk = text.substring(i);
+                    } else {
+                        let splitPos = i + maxLen;
+                        let lastPunct = -1;
+                        // Prioritize splitting at sentence-ending punctuation or newlines
+                        ['.', '!', '?', 'ฯ', '…', '”', '\n'].forEach(p => {
+                            const pos = text.lastIndexOf(p, splitPos);
+                            if (pos > i && pos > lastPunct) {
+                                lastPunct = pos;
+                            }
+                        });
+
+                        if (lastPunct > i) {
+                            splitPos = lastPunct;
+                        } else {
+                            // Otherwise, try to split at a space
+                            const lastSpace = text.lastIndexOf(' ', splitPos);
+                            if (lastSpace > i) {
+                                splitPos = lastSpace;
+                            }
+                        }
+                        chunk = text.substring(i, splitPos + 1);
+                    }
+                    const trimmedChunk = chunk.trim();
+                    if (trimmedChunk) {
+                        chunks.push(trimmedChunk);
+                    }
+                    i += chunk.length;
+                }
+                return chunks;
+            }
+
             // ฟังก์ชันสร้าง URL สำหรับ Google Translate TTS
-            function generateTTSUrl(text, lang) {
-                addLog(`กำลังสร้าง URL สำหรับ TTS - ภาษา: ${lang}`, 'info');
-                const encodedText = encodeURIComponent(text);
-                const url = `https://translate.google.com/translate_tts?ie=UTF-8&q=${encodedText}&tl=${lang}&client=tw-ob&ttsspeed=1.35`;
-                addLog(`URL ที่สร้าง: ${url.substring(0, 100)}...`, 'info');
-                return url;
+            async function generateTTSUrl(chunk, index, total) {
+                if (isLocalProxyAvailable) {
+                    try {
+                        log(`Attempting to fetch chunk ${index + 1} from local proxy...`);
+                        const response = await fetch('http://127.0.0.1:8000/api/proxy-tts', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({ text: chunk }),
+                            signal: AbortSignal.timeout(3000) // 3 second timeout
+                        });
+                        if (!response.ok) {
+                            throw new Error(`Local proxy returned status ${response.status}`);
+                        }
+                        const blob = await response.blob();
+                        log(`Chunk ${index + 1} fetched successfully from local proxy.`);
+                        return URL.createObjectURL(blob);
+                    } catch (error) {
+                        log(`Local proxy failed for chunk ${index + 1}. Falling back to Google TTS.`, error);
+                        isLocalProxyAvailable = false; // Mark proxy as unavailable
+                        updateStatus('Local proxy ไม่พร้อมใช้งาน, กำลังใช้ Google TTS', 'warning');
+                        // Fall through to Google TTS
+                    }
+                }
+                
+                log(`Using Google TTS for chunk ${index + 1}.`);
+                return `https://translate.google.com/translate_tts?ie=UTF-8&q=${encodeURIComponent(chunk)}&tl=th&client=tw-ob&ttsspeed=1.35&total=${total}&idx=${index}`;
             }
             
-            // ฟังก์ชันแสดงสถานะ
-            function showStatus(message, type) {
-                statusDiv.textContent = message;
-                statusDiv.className = 'status ' + type;
-                statusDiv.style.display = 'block';
-                
-                // ซ่อนสถานะหลัง 3 วินาที
-                setTimeout(() => {
-                    statusDiv.style.display = 'none';
-                }, 3000);
+            // ฟังก์ชันอัปเดต progress bar
+            function updateProgress() {
+                if (audioQueue.length > 0) {
+                    const progress = ((currentIndex) / audioQueue.length) * 100;
+                    progressBar.style.width = `${progress}%`;
+                }
             }
             
-            // ฟังก์ชันตรวจสอบการเชื่อมต่อ
-            function checkConnectivity() {
-                return new Promise((resolve) => {
-                    const img = new Image();
-                    const timeout = setTimeout(() => {
-                        resolve(false);
-                    }, 5000);
-                    
-                    img.onload = () => {
-                        clearTimeout(timeout);
-                        resolve(true);
-                    };
-                    
-                    img.onerror = () => {
-                        clearTimeout(timeout);
-                        resolve(false);
-                    };
-                    
-                    img.src = 'https://www.google.com/favicon.ico';
-                });
+            // ฟังก์ชันอัปเดต live text display
+            function updateLiveText() {
+                if (chunksForDisplay.length > 0 && currentIndex < chunksForDisplay.length) {
+                    statusDiv.textContent = chunksForDisplay[currentIndex];
+                    statusDiv.className = 'status playing';
+                } 
             }
             
-            // ฟังก์ชันอ่านออกเสียง
-            async function speakText() {
-                const text = textArea.value.trim();
-                const lang = languageSelect.value;
+            // ฟังก์ชัน pre-cache audio elements แบบ batch
+            function preloadAudioElements() {
+                preloadedChunks = [];
+                preloadQueue = [];
+                preloadIndex = 0;
+                log('Preloading audio elements...');
                 
-                addLog(`เริ่มกระบวนการอ่านออกเสียง - ข้อความ: "${text.substring(0, 50)}..."`, 'info');
+                // สร้าง preload queue
+                for (let i = 0; i < audioQueue.length; i++) {
+                    preloadQueue.push({
+                        url: audioQueue[i],
+                        index: i
+                    });
+                }
                 
-                if (!text) {
-                    addLog('ข้อผิดพลาด: ไม่มีข้อความให้อ่านออกเสียง', 'error');
-                    showStatus('กรุณาใส่ข้อความที่ต้องการอ่านออกเสียง', 'error');
+                // เริ่ม preload 3 chunks แรก
+                preloadNextBatch();
+            }
+            
+            // ฟังก์ชัน preload 3 chunks ถัดไป
+            function preloadNextBatch() {
+                const batchSize = 3;
+                let loadedCount = 0;
+                
+                for (let i = 0; i < batchSize && preloadIndex < preloadQueue.length; i++) {
+                    const item = preloadQueue[preloadIndex];
+                    const audio = new Audio(item.url);
+                    audio.preload = 'auto';
+                    audio.playbackRate = 1.35;
+                    
+                    // เก็บ audio element ตาม index
+                    preloadedChunks[item.index] = audio;
+                    preloadIndex++;
+                    loadedCount++;
+                }
+                
+                log(`Preloaded ${loadedCount} chunks, up to index ${preloadIndex - 1}.`);
+            }
+            
+            // ฟังก์ชันเล่นเสียงจาก queue พร้อม preloading
+            function playNext() {
+                if (currentIndex >= audioQueue.length || !isPlaying) {
+                    if (!isPaused) {
+                        finishPlayback();
+                    }
                     return;
                 }
                 
-                // ตรวจสอบการเชื่อมต่อ
-                addLog('กำลังตรวจสอบการเชื่อมต่อกับ Google...', 'info');
-                const isConnected = await checkConnectivity();
+                updateProgress();
+                updateLiveText(); // อัปเดต live text
+                log(`Playing chunk ${currentIndex + 1}/${audioQueue.length}.`);
                 
-                if (!isConnected) {
-                    addLog('คำเตือน: ไม่สามารถเชื่อมต่อกับ Google ได้ อาจเป็นเพราะ CORS หรือการบล็อกจากเบราว์เซอร์', 'warning');
-                    showStatus('ไม่สามารถเชื่อมต่อกับ Google ได้ ระบบอาจไม่ทำงานบน GitHub Pages', 'warning');
+                // ตรวจสอบว่ามี preloaded chunk หรือไม่
+                currentAudio = preloadedChunks[currentIndex];
+                
+                // ถ้าไม่มีให้สร้างใหม่ (fallback)
+                if (!currentAudio) {
+                    log(`Chunk ${currentIndex + 1} was not preloaded, creating new audio element.`);
+                    currentAudio = new Audio(audioQueue[currentIndex]);
+                    currentAudio.preload = 'auto';
+                    currentAudio.playbackRate = 1.35;
                 }
                 
-                // หยุดเสียงเก่าถ้ามี
-                if (audio) {
-                    audio.pause();
-                    addLog('หยุดเสียงเก่า', 'info');
-                }
-                
-                try {
-                    const ttsUrl = generateTTSUrl(text, lang);
-                    addLog('กำลังสร้าง Audio object...', 'info');
-                    audio = new Audio(ttsUrl);
-                    
-                    audio.onplay = function() {
-                        isPlaying = true;
-                        speakBtn.disabled = true;
-                        stopBtn.disabled = false;
-                        addLog('เริ่มเล่นเสียง', 'info');
-                        showStatus('กำลังอ่านออกเสียง...', 'success');
-                    };
-                    
-                    audio.onended = function() {
-                        isPlaying = false;
-                        speakBtn.disabled = false;
-                        stopBtn.disabled = true;
-                        addLog('เล่นเสียงเสร็จสิ้น', 'info');
-                    };
-                    
-                    audio.onerror = function(e) {
-                        isPlaying = false;
-                        speakBtn.disabled = false;
-                        stopBtn.disabled = true;
-                        addLog(`ข้อผิดพลาดในการเล่นเสียง: ${e.target.error?.code || 'ไม่ทราบสาเหตุ'}`, 'error');
-                        showStatus('ไม่สามารถอ่านออกเสียงได้ กรุณาลองใหม่อีกครั้ง', 'error');
-                        
-                        // ตรวจสอบข้อผิดพลาดเฉพาะ
-                        if (e.target.error?.code === 4) {
-                            addLog('คำเตือน: อาจเป็นปัญหา CORS หรือการบล็อกจากเบราว์เซอร์ ระบบอาจไม่ทำงานบน GitHub Pages', 'warning');
-                        }
-                    };
-                    
-                    addLog('กำลังเริ่มเล่นเสียง...', 'info');
-                    await audio.play();
-                } catch (error) {
-                    addLog(`ข้อผิดพลาด: ${error.message}`, 'error');
-                    showStatus('เกิดข้อผิดพลาดในการอ่านออกเสียง', 'error');
+                currentAudio.play().catch(error => {
+                    log(`Error playing chunk ${currentIndex + 1}:`, error);
+                    updateStatus('ไม่สามารถอ่านออกเสียงได้', 'error');
+                    isPlaying = false;
+                    isPaused = false;
                     speakBtn.disabled = false;
                     stopBtn.disabled = true;
+                    previousBtn.disabled = true;
+                    nextBtn.disabled = true;
+                    speakBtn.textContent = 'อ่าน';
+                });
+                
+                currentAudio.onended = function() {
+                    log(`Finished playing chunk ${currentIndex + 1}.`);
+                    if (isPlaying && !isPaused) {
+                        currentIndex++;
+                        
+                        // Preload chunks ถัดไปใน background
+                        if (preloadIndex < preloadQueue.length) {
+                            preloadNextBatch();
+                        }
+                        
+                        playNext();
+                    }
+                };
+                
+                currentAudio.onerror = function(e) {
+                    log(`Audio element error for chunk ${currentIndex + 1}:`, e);
+                    updateStatus('ไม่สามารถอ่านออกเสียงได้', 'error');
+                    isPlaying = false;
+                    isPaused = false;
+                    speakBtn.disabled = false;
+                    stopBtn.disabled = true;
+                    previousBtn.disabled = true;
+                    nextBtn.disabled = true;
+                    speakBtn.textContent = 'อ่าน';
+                };
+            }
+            
+            // ฟังก์ชันเล่น chunk ถัดไป
+            function playNextChunk() {
+                if (currentIndex < audioQueue.length - 1) {
+                    if (currentAudio) {
+                        currentAudio.pause();
+                    }
+                    currentIndex++;
                     
-                    // ตรวจสอบข้อผิดพลาด CORS
-                    if (error.name === 'NotAllowedError') {
-                        addLog('คำเตือน: อาจเป็นปัญหาการอนุญาตหรือ CORS ระบบอาจไม่ทำงานบน GitHub Pages', 'warning');
+                    // ถ้ากำลังเล่นอยู่ ให้เล่น chunk ใหม่ทันที
+                    if (isPlaying && !isPaused) {
+                        playChunk(currentIndex);
+                    } else {
+                        // ถ้าหยุดชั่วคราว ให้อัปเดตสถานะและ progress bar เท่านั้น
+                        updateProgress();
+                        updateLiveText(); // อัปเดต live text
+                        updateStatus(`หยุดชั่วคราวที่ chunk ${currentIndex + 1}/${audioQueue.length}`, 'success');
                     }
                 }
             }
             
-            // ฟังก์ชันหยุดเสียง
-            function stopText() {
-                if (audio) {
-                    audio.pause();
-                    audio.currentTime = 0;
-                    addLog('หยุดการเล่นเสียง', 'info');
+            // ฟังก์ชันเล่น chunk ก่อนหน้า
+            function playPreviousChunk() {
+                if (currentIndex > 0) {
+                    if (currentAudio) {
+                        currentAudio.pause();
+                    }
+                    currentIndex--;
+                    
+                    // ถ้ากำลังเล่นอยู่ ให้เล่น chunk ใหม่ทันที
+                    if (isPlaying && !isPaused) {
+                        playChunk(currentIndex);
+                    } else {
+                        // ถ้าหยุดชั่วคราว ให้อัปเดตสถานะและ progress bar เท่านั้น
+                        updateProgress();
+                        updateLiveText(); // อัปเดต live text
+                        updateStatus(`หยุดชั่วคราวที่ chunk ${currentIndex + 1}/${audioQueue.length}`, 'success');
+                    }
                 }
-                isPlaying = false;
-                speakBtn.disabled = false;
-                stopBtn.disabled = true;
-                showStatus('หยุดการอ่านออกเสียง', 'success');
             }
             
-            // Event listeners
-            speakBtn.addEventListener('click', speakText);
-            stopBtn.addEventListener('click', stopText);
-            clearLogBtn.addEventListener('click', clearLog);
+            // ฟังก์ชันเล่น chunk ที่กำหนด
+            function playChunk(index) {
+                if (index >= audioQueue.length) return;
+                
+                currentIndex = index;
+                updateProgress();
+                updateLiveText(); // อัปเดต live text
+                updateStatus(`กำลังอ่านออกเสียง... (${currentIndex + 1}/${audioQueue.length})`, 'playing');
+                
+                // ตรวจสอบว่ามี preloaded chunk หรือไม่
+                currentAudio = preloadedChunks[currentIndex];
+                
+                // ถ้าไม่มีให้สร้างใหม่ (fallback)
+                if (!currentAudio) {
+                    console.warn(`Chunk ${currentIndex} not preloaded, creating new audio element`);
+                    currentAudio = new Audio(audioQueue[currentIndex]);
+                    currentAudio.preload = 'auto';
+                    currentAudio.playbackRate = 1.35;
+                }
+                
+                currentAudio.play().catch(error => {
+                    updateStatus('ไม่สามารถอ่านออกเสียงได้', 'error');
+                });
+                
+                currentAudio.onended = function() {
+                    if (isPlaying && !isPaused) {
+                        currentIndex++;
+                        playNext();
+                    }
+                };
+            }
             
-            // หยุดเสียงเมื่อหน้าเว็บถูกปิด
-            window.addEventListener('beforeunload', function() {
-                if (audio) {
-                    audio.pause();
-                    addLog('หยุดเสียงก่อนปิดหน้าเว็บ', 'info');
+            // ฟังก์ชันสลับระหว่าง อ่านออกเสียง/หยุดชั่วคราว/เล่นต่อ
+            function togglePlayPause() {
+                if (!isPlaying && !isPaused) {
+                    // เริ่มเล่น
+                    const text = textInput.value.trim();
+                    if (!text) {
+                        updateStatus('กรุณาป้อนข้อความ', 'error');
+                        return;
+                    }
+                    speakText();
+                } else if (isPlaying && !isPaused) {
+                    // หยุดชั่วคราว
+                    isPaused = true;
+                    isPlaying = false;
+                    if (currentAudio) {
+                        currentAudio.pause();
+                    }
+                    speakBtn.textContent = 'อ่านต่อ';
+                    updateStatus('หยุดชั่วคราว', 'success');
+                } else if (!isPlaying && isPaused) {
+                    // เล่นต่อ
+                    isPlaying = true;
+                    isPaused = false;
+                    if (currentAudio) {
+                        currentAudio.play();
+                    } else {
+                        playNext();
+                    }
+                    speakBtn.textContent = 'กำลังอ่าน';
+                    updateStatus(`กำลังอ่านออกเสียง... (${currentIndex + 1}/${audioQueue.length})`, 'playing');
+                }
+            }
+            
+            // ฟังก์ชันจบการเล่น
+            function finishPlayback() {
+                isPlaying = false;
+                isPaused = false;
+                updateStatus('อ่านเสร็จแล้ว', 'success');
+                progressBar.style.width = '100%';
+                speakBtn.disabled = false;
+                stopBtn.disabled = true;
+                previousBtn.disabled = true;
+                nextBtn.disabled = true;
+                speakBtn.textContent = 'อ่าน';
+                
+                // ทำเครื่องหมายว่ารายการที่เล่นเสร็จแล้ว
+                if (currentPlayingIds.length > 0) {
+                    log(`Marking ${currentPlayingIds.length} playlist items as played.`);
+                    currentPlayingIds.forEach(id => {
+                        const item = playlist.find(item => item.id === id);
+                        if (item) {
+                            item.played = true;
+                        }
+                    });
+                    savePlaylist();
+                }
+                
+                currentPlayingIds = [];
+                currentPlayingItemId = null;
+                preloadedChunks = [];
+                preloadQueue = [];
+                preloadIndex = 0;
+                currentAudio = null;
+                chunksForDisplay = [];
+                
+                // Re-render playlist to update button states
+                if (playlistModal.style.display === 'flex') {
+                    renderPlaylist();
+                }
+
+                // รีเซ็ต progress หลังจากเสร็จสิ้น
+                setTimeout(() => {
+                    if (!isPlaying) {
+                        progressBar.style.width = '0%';
+                    }
+                }, 2000);
+            }
+            
+            // ฟังก์ชันแปลข้อความด้วย Google Translate
+            async function translateText(text) {
+                try {
+                    const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=th&tl=th&dt=t&q=${encodeURIComponent(text)}`;
+                    const response = await fetch(url);
+                    const data = await response.json();
+                    return data[0][0][0];
+                } catch (error) {
+                    console.error('Translation error:', error);
+                    return text; // คืนค่าข้อความเดิมหากแปลไม่ได้
+                }
+            }
+            
+            // ฟังก์ชันอ่านออกเสียง
+            async function speakText(textToSpeak = textInput.value, itemIds = []) {
+                log('speakText called.');
+                const text = textToSpeak.trim();
+                if (!text) {
+                    log('speakText failed: Text input is empty.');
+                    return updateStatus('กรุณาป้อนข้อความ', 'error');
+                }
+
+                try {
+                    stopSpeech();
+                    updateStatus('กำลังประมวลผล...', 'playing');
+                    log('Processing text...');
+
+                    // Set the currently playing item ID(s)
+                    currentPlayingIds = itemIds || [];
+                    if (currentPlayingIds.length === 1) {
+                        currentPlayingItemId = currentPlayingIds[0];
+                    } else {
+                        currentPlayingItemId = null; // No single item is active during 'Play All'
+                    }
+
+                    const chunks = splitTextIntoChunks(text);
+                    if (!chunks.length) {
+                        log('speakText failed: No chunks created from text.');
+                        return updateStatus('ไม่มีข้อความให้อ่าน', 'error');
+                    }
+                    log(`Split text into ${chunks.length} chunks.`);
+
+                    const translatedChunks = await Promise.all(chunks.map(translateText));
+                    const finalChunks = translatedChunks.map(replaceCustomWords);
+                    log('Finished translating and replacing custom words.');
+
+                    const urls = [];
+                    log('Starting sequential audio generation...');
+                    for (let i = 0; i < finalChunks.length; i++) {
+                        const chunk = finalChunks[i];
+                        updateStatus(`กำลังสร้างเสียง... (${i + 1}/${finalChunks.length})`, 'playing');
+                        const url = await generateTTSUrl(chunk, i, finalChunks.length);
+                        if (url) {
+                            urls.push(url);
+                        } else {
+                            log(`Failed to generate audio for chunk ${i + 1}. Stopping.`);
+                            updateStatus(`ไม่สามารถสร้างเสียงสำหรับส่วนที่ ${i + 1} ได้`, 'error');
+                            urls.forEach(u => { if (u.startsWith('blob:')) URL.revokeObjectURL(u); });
+                            return; 
+                        }
+                    }
+                    audioQueue = urls;
+                    log('Finished audio generation. Audio queue created with ' + audioQueue.length + ' items.');
+
+                    if (audioQueue.length === 0) {
+                        log('speakText failed: Audio queue is empty after generation.');
+                        updateStatus('ไม่สามารถสร้างเสียงได้', 'error');
+                        return;
+                    }
+
+                    chunksForDisplay = finalChunks; // เก็บ chunks สำหรับแสดงใน live text
+                    
+                    // Preload audio elements
+                    preloadAudioElements();
+
+                    isPlaying = true;
+                    isPaused = false;
+                    currentIndex = 0;
+                    speakBtn.disabled = false;
+                    stopBtn.disabled = false;
+                    previousBtn.disabled = false;
+                    nextBtn.disabled = false;
+                    speakBtn.textContent = 'กำลังอ่าน';
+                    
+                    // Re-render playlist to show the 'Stop' button on the playing item
+                    if (playlistModal.style.display === 'flex') {
+                        renderPlaylist();
+                    }
+
+                    log('Starting playback...');
+                    playNext();
+                } catch (error) {
+                    log('speakText error:', error);
+                    updateStatus('เกิดข้อผิดพลาด: ' + error.message, 'error');
+                    speakBtn.disabled = false;
+                    stopBtn.disabled = true;
+                    previousBtn.disabled = true;
+                    nextBtn.disabled = true;
+                    speakBtn.textContent = 'อ่าน';
+                }
+            }
+            
+            // ฟังก์ชันหยุดเสียง
+            function stopSpeech() {
+                isPlaying = false;
+                isPaused = false;
+                currentPlayingItemId = null;
+                currentPlayingIds = [];
+                
+                if (currentAudio) {
+                    currentAudio.pause();
+                    currentAudio = null;
+                }
+                
+                if (previewAudio) {
+                    previewAudio.pause();
+                    previewAudio = null;
+                }
+                
+                audioQueue = [];
+                preloadedChunks = [];
+                preloadQueue = [];
+                preloadIndex = 0;
+                currentIndex = 0;
+                chunksForDisplay = [];
+                
+                updateStatus('หยุดแล้ว', 'success');
+                speakBtn.disabled = false;
+                stopBtn.disabled = true;
+                previousBtn.disabled = true;
+                nextBtn.disabled = true;
+                speakBtn.textContent = 'อ่าน';
+                progressBar.style.width = '0%';
+
+                // Re-render playlist to update button states
+                if (playlistModal.style.display === 'flex') {
+                    renderPlaylist();
+                }
+            }
+            
+            // ฟังก์ชันล้างข้อความ
+            function clearText() {
+                textInput.value = '';
+                updateStatus('ป้อนข้อความเพื่อเริ่มต้น', '');
+            }
+            
+            // ฟังก์ชันวางข้อความจากคลิปบอร์ด
+            async function pasteText() {
+                try {
+                    const text = await navigator.clipboard.readText();
+                    textInput.value = text;
+                    updateStatus('วางข้อความจากคลิปบอร์ดแล้ว', 'success');
+                } catch (err) {
+                    updateStatus('ไม่สามารถวางข้อความได้', 'error');
+                }
+            }
+            
+            // ฟังก์ชันอัปเดตสถานะ
+            function updateStatus(message, type) {
+                statusDiv.textContent = message;
+                statusDiv.className = 'status ' + type;
+            }
+            
+            // ฟังก์ชันทดสอบเสียง
+            function previewSpeech() {
+                const previewStatus = document.getElementById('previewStatus');
+                const text = previewText.value.trim();
+                
+                if (!text) {
+                    previewStatus.textContent = 'กรุณาป้อนข้อความ';
+                    previewStatus.className = 'status error';
+                    return;
+                }
+                
+                try {
+                    const customWordText = replaceCustomWords(text);
+                    
+                    translateText(customWordText).then(async (translated) => {
+                        const finalText = replaceCustomWords(translated);
+                        const url = await generateTTSUrl(finalText, 0, 1);
+
+                        if (!url) {
+                            previewStatus.textContent = 'ไม่สามารถสร้างเสียงตัวอย่างได้';
+                            previewStatus.className = 'status error';
+                            return;
+                        }
+                        
+                        if (previewAudio) {
+                            previewAudio.pause();
+                        }
+                        
+                        previewAudio = new Audio(url);
+                        previewAudio.playbackRate = 1.35;
+
+                        // 1. Attach event handlers FIRST
+                        previewAudio.onended = function() {
+                            log('Preview audio finished.');
+                            previewStatus.textContent = 'เล่นเสียงเสร็จแล้ว';
+                            previewStatus.className = 'status success';
+                            previewBtn.disabled = false;
+                        };
+
+                        previewAudio.onerror = function() {
+                            log('Preview audio error.');
+                            previewStatus.textContent = 'ไม่สามารถเล่นเสียงได้';
+                            previewStatus.className = 'status error';
+                            previewBtn.disabled = false;
+                        };
+
+                        // 2. THEN call play()
+                        try {
+                            await previewAudio.play();
+                            log('Preview audio started.');
+                            previewStatus.textContent = 'กำลังเล่นเสียง...';
+                            previewStatus.className = 'status playing';
+                            previewBtn.disabled = true;
+                        } catch (error) {
+                            log('previewAudio.play() was rejected.', error);
+                            // The onerror handler will likely catch this, but just in case:
+                            previewStatus.textContent = 'ไม่สามารถเล่นเสียงได้';
+                            previewStatus.className = 'status error';
+                            previewBtn.disabled = false;
+                        }
+                    });
+                } catch (error) {
+                    log('Error in previewSpeech:', error);
+                    previewStatus.textContent = 'เกิดข้อผิดพลาด: ' + error.message;
+                    previewStatus.className = 'status error';
+                }
+            }
+            
+            // นำเข้าจากไฟล์
+            function importFromFile() {
+                const file = importFileInput.files[0];
+                if (!file) {
+                    updateStatus('กรุณาเลือกไฟล์', 'error');
+                    return;
+                }
+                
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    customWordsTextarea.value = e.target.result;
+                    updateStatus('นำเข้าข้อมูลจากไฟล์เรียบร้อย', 'success');
+                };
+                reader.readAsText(file, 'UTF-8');
+            }
+            
+            // เพิ่มลง playlist
+            function addToPlaylist() {
+                const text = textInput.value.trim();
+                
+                if (!text) {
+                    updateStatus('กรุณาป้อนข้อความ', 'error');
+                    return;
+                }
+                
+                // สร้างชื่อ playlist อัตโนมัติจากข้อความ
+                let title = text.substring(0, 30);
+                if (text.length > 30) {
+                    title += '...';
+                }
+                
+                playlist.push({
+                    id: Date.now(),
+                    title: title,
+                    text: text,
+                    createdAt: new Date().toLocaleString('th-TH'),
+                    played: false
+                });
+                
+                savePlaylist();
+                updateStatus('เพิ่มลง Playlist แล้ว', 'success');
+            }
+            
+            // ลบจาก playlist
+            function removeFromPlaylist(id) {
+                playlist = playlist.filter(item => item.id !== id);
+                savePlaylist();
+                renderPlaylist();
+            }
+            
+            // ล้าง playlist ทั้งหมด
+            function clearAllPlaylist() {
+                playlist = [];
+                savePlaylist();
+                renderPlaylist();
+                updateStatus('ล้าง Playlist ทั้งหมดเรียบร้อย', 'success');
+            }
+            
+            // ทำเครื่องหมายว่ายังไม่ได้อ่าน
+            function markAsUnread(id) {
+                const item = playlist.find(item => item.id === id);
+                if (item) {
+                    item.played = false;
+                    savePlaylist();
+                    renderPlaylist();
+                }
+            }
+            
+            // เล่นจาก playlist
+            function playFromPlaylist(id) {
+                // If this item is already playing, stop it. Otherwise, play it.
+                if (isPlaying && currentPlayingItemId === id) {
+                    stopSpeech();
+                } else {
+                    const item = playlist.find(item => item.id === id);
+                    if (item) {
+                        speakText(item.text, [id]);
+                    }
+                }
+            }
+            
+            // เล่นทั้งหมดที่ยังไม่ได้เล่น
+            function playAllUnplayed() {
+                const unplayedItems = playlist.filter(item => !item.played);
+                if (unplayedItems.length === 0) {
+                    updateStatus('ไม่มีรายการที่ยังไม่ได้เล่น', 'error');
+                    return;
+                }
+                
+                // สร้างข้อความรวมจากทุกรายการที่ยังไม่ได้เล่น
+                const combinedText = unplayedItems.map(item => item.text).join('\n\n');
+                const itemIds = unplayedItems.map(item => item.id);
+                speakText(combinedText, itemIds);
+            }
+            
+            // แสดง playlist
+            function renderPlaylist() {
+                if (playlist.length === 0) {
+                    playlistItems.innerHTML = '<div class="empty-playlist">ไม่มีรายการใน Playlist</div>';
+                    playAllBtn.disabled = true;
+                    clearAllBtn.disabled = true;
+                    return;
+                }
+
+                const hasUnplayed = playlist.some(item => !item.played);
+                playAllBtn.disabled = !hasUnplayed;
+                clearAllBtn.disabled = false;
+
+                playlistItems.innerHTML = '';
+
+                playlist.forEach((item, index) => {
+                    const playlistItem = document.createElement('div');
+                    playlistItem.className = `playlist-item ${item.played ? 'played' : ''}`;
+                    
+                    const isCurrentlyPlaying = isPlaying && item.id === currentPlayingItemId;
+
+                    let actionsHTML = '';
+                    if (isCurrentlyPlaying) {
+                        actionsHTML += `<button class="playlist-toggle-btn delete-btn" data-id="${item.id}">หยุด</button>`;
+                    } else {
+                        actionsHTML += `<button class="playlist-toggle-btn play-btn" data-id="${item.id}">เล่น</button>`;
+                    }
+
+                    if (item.played) {
+                        actionsHTML += `<button class="unread-btn" data-id="${item.id}">Unread</button>`;
+                    }
+                    actionsHTML += `<button class="delete-btn" data-id="${item.id}">ลบ</button>`;
+
+                    playlistItem.innerHTML = `
+                        <div class="playlist-number">${index + 1}.</div>
+                        <div class="playlist-title" title="${item.title}">${item.title}</div>
+                        <div class="playlist-actions">
+                            ${actionsHTML}
+                        </div>
+                    `;
+                    playlistItems.appendChild(playlistItem);
+                });
+
+                document.querySelectorAll('.playlist-toggle-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const id = parseInt(e.target.dataset.id);
+                        playFromPlaylist(id);
+                    });
+                });
+
+                document.querySelectorAll('.unread-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const id = parseInt(e.target.dataset.id);
+                        markAsUnread(id);
+                    });
+                });
+
+                document.querySelectorAll('.delete-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const id = parseInt(e.target.dataset.id);
+                        // Prevent delete from triggering the toggle play button
+                        if (e.target.classList.contains('playlist-toggle-btn')) return;
+                        removeFromPlaylist(id);
+                    });
+                });
+            }
+
+            // โหลดรายการโมเดล
+            async function loadModels() {
+                const select = document.getElementById('modelSelect');
+                select.innerHTML = '<option value="">กำลังโหลดโมเดล...</option>';
+                select.disabled = true;
+
+                try {
+                    // ใช้ข้อมูลโมเดลคงที่ (ใน production ควรเรียก API จริง)
+                    const models = [
+                        'gemini-2.5-flash',
+                        'gemini-2.0-flash',
+                        'gemini-1.5-flash',
+                        'gemini-1.5-pro',
+                        'gemini-1.0-pro'
+                    ];
+
+                    select.innerHTML = '';
+                    models.forEach(model => {
+                        const option = document.createElement('option');
+                        option.value = model;
+                        option.textContent = model;
+                        if (model === 'gemini-2.5-flash') {
+                            option.selected = true;
+                        }
+                        select.appendChild(option);
+                    });
+                } catch (error) {
+                    // หากโหลดไม่สำเร็จ ใช้ค่าเริ่มต้น
+                    select.innerHTML = `
+                        <option value="gemini-2.5-flash" selected>gemini-2.5-flash</option>
+                        <option value="gemini-2.0-flash">gemini-2.0-flash</option>
+                        <option value="gemini-1.5-flash">gemini-1.5-flash</option>
+                        <option value="gemini-1.5-pro">gemini-1.5-pro</option>
+                    `;
+                    updateStatus('ไม่สามารถโหลดรายการโมเดลได้ ใช้ค่าเริ่มต้น', 'error');
+                }
+
+                select.disabled = false;
+            }
+
+            // Disable all AI buttons
+            function disableAIButtons() {
+                aiEditBtn.disabled = true;
+                aiSummarizeBtn.disabled = true;
+                aiMyStyleBtn.disabled = true;
+                //promptBtn.disabled = true;
+            }
+
+            // Enable all AI buttons
+            function enableAIButtons() {
+                aiEditBtn.disabled = false;
+                aiSummarizeBtn.disabled = false;
+                aiMyStyleBtn.disabled = false;
+                //promptBtn.disabled = false;
+            }
+
+            // ฟังก์ชันเล่นเสียงแจ้งเตือน
+            function playNotificationSound() {
+                try {
+                    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                    const oscillator = audioContext.createOscillator();
+                    const gainNode = audioContext.createGain();
+                    
+                    oscillator.connect(gainNode);
+                    gainNode.connect(audioContext.destination);
+                    
+                    oscillator.frequency.value = 800;
+                    oscillator.type = 'sine';
+                    
+                    gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+                    
+                    oscillator.start(audioContext.currentTime);
+                    oscillator.stop(audioContext.currentTime + 0.5);
+                } catch (e) {
+                    console.log('Web Audio API not supported');
+                }
+            }
+
+            // AI Functions
+            async function processWithAI() {
+                const apiKey = apiKeyInput.value;
+                const model = modelSelect.value;
+                const text = textInput.value;
+                
+                if (!apiKey) {
+                    updateStatus('กรุณาใส่ API Key', 'error');
+                    return;
+                }
+                
+                if (!text.trim()) {
+                    updateStatus('ไม่มีข้อความให้ประมวลผล', 'error');
+                    return;
+                }
+                
+                // Disable all AI buttons and show processing status
+                disableAIButtons();
+                aiEditBtn.textContent = 'กำลังประมวลผล...';
+                updateStatus('AI กำลังประมวลผล...', 'playing');
+                
+                try {
+                    const fullPrompt = prompts.edit + '\n' + text;
+
+                    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            contents: [{
+                                parts: [{
+                                    text: fullPrompt
+                                }]
+                            }]
+                        })
+                    });
+
+                    if (!response.ok) {
+                        const errorText = await response.text();
+                        throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
+                    }
+
+                    const data = await response.json();
+                    const aiResponse = data.candidates[0].content.parts[0].text;
+                    
+                    textInput.value = aiResponse;
+                    updateStatus('ประมวลผลด้วย AI สำเร็จ', 'success');
+                    playNotificationSound(); // เล่นเสียงแจ้งเตือนเมื่อเสร็จสิ้น
+                } catch (error) {
+                    console.error('AI Processing error:', error);
+                    updateStatus(`AI Processing error: ${error.message}`, 'error');
+                } finally {
+                    aiEditBtn.disabled = false;
+                    aiEditBtn.textContent = 'AI จัดคำ';
+                    enableAIButtons();
+                }
+            }
+
+            async function summarizeWithAI() {
+                const apiKey = apiKeyInput.value;
+                const model = modelSelect.value;
+                const text = textInput.value;
+                
+                if (!apiKey) {
+                    updateStatus('กรุณาใส่ API Key', 'error');
+                    return;
+                }
+                
+                if (!text.trim()) {
+                    updateStatus('ไม่มีข้อความให้ประมวลผล', 'error');
+                    return;
+                }
+                
+                // Disable all AI buttons and show processing status
+                disableAIButtons();
+                aiSummarizeBtn.textContent = 'กำลังสรุป...';
+                updateStatus('AI กำลังประมวลผล...', 'playing');
+                
+                try {
+                    const fullPrompt = prompts.summarize + '\n' + text;
+
+                    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            contents: [{
+                                parts: [{
+                                    text: fullPrompt
+                                }]
+                            }]
+                        })
+                    });
+
+                    if (!response.ok) {
+                        const errorText = await response.text();
+                        throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
+                    }
+
+                    const data = await response.json();
+                    const aiResponse = data.candidates[0].content.parts[0].text;
+                    
+                    textInput.value = aiResponse;
+                    updateStatus('สรุปเนื้อหาด้วย AI สำเร็จ', 'success');
+                    playNotificationSound(); // เล่นเสียงแจ้งเตือนเมื่อเสร็จสิ้น
+                } catch (error) {
+                    console.error('AI Summarize error:', error);
+                    updateStatus(`AI Summarize error: ${error.message}`, 'error');
+                } finally {
+                    aiSummarizeBtn.disabled = false;
+                    aiSummarizeBtn.textContent = 'AI สรุป';
+                    enableAIButtons();
+                }
+            }
+
+            async function myStyleWithAI() {
+                const apiKey = apiKeyInput.value;
+                const model = modelSelect.value;
+                const text = textInput.value;
+                
+                if (!apiKey) {
+                    updateStatus('กรุณาใส่ API Key', 'error');
+                    return;
+                }
+                
+                if (!text.trim()) {
+                    updateStatus('ไม่มีข้อความให้ประมวลผล', 'error');
+                    return;
+                }
+                
+                // Disable all AI buttons and show processing status
+                disableAIButtons();
+                aiMyStyleBtn.textContent = 'กำลังประมวลผล...';
+                updateStatus('AI กำลังประมวลผล...', 'playing');
+                
+                try {
+                    const fullPrompt = prompts.mystyle + '\n' + text;
+
+                    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            contents: [{
+                                parts: [{
+                                    text: fullPrompt
+                                }]
+                            }]
+                        })
+                    });
+
+                    if (!response.ok) {
+                        const errorText = await response.text();
+                        throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
+                    }
+
+                    const data = await response.json();
+                    const aiResponse = data.candidates[0].content.parts[0].text;
+                    
+                    textInput.value = aiResponse;
+                    updateStatus('ประมวลผลด้วย AI สั้น สำเร็จ', 'success');
+                    playNotificationSound(); // เล่นเสียงแจ้งเตือนเมื่อเสร็จสิ้น
+                } catch (error) {
+                    console.error('AI My Style error:', error);
+                    updateStatus(`AI My Style error: ${error.message}`, 'error');
+                } finally {
+                    aiMyStyleBtn.disabled = false;
+                    aiMyStyleBtn.textContent = 'สั้น';
+                    enableAIButtons();
+                }
+            }
+
+            // Event listeners
+            speakBtn.addEventListener('click', togglePlayPause);
+            stopBtn.addEventListener('click', stopSpeech);
+            previousBtn.addEventListener('click', playPreviousChunk);
+            nextBtn.addEventListener('click', playNextChunk);
+            clearBtn.addEventListener('click', clearText);
+            pasteBtn.addEventListener('click', pasteText);
+            addToPlaylistMainBtn.addEventListener('click', addToPlaylist);
+
+            wordBtn.addEventListener('click', function () {
+                wordModal.style.display = 'flex';
+            });
+
+            playlistBtn.addEventListener('click', function () {
+                playlistModal.style.display = 'flex';
+                renderPlaylist();
+            });
+
+            promptBtn.addEventListener('click', function () {
+                promptModal.style.display = 'flex';
+            });
+
+            closeButtons.forEach(button => {
+                button.addEventListener('click', function () {
+                    wordModal.style.display = 'none';
+                    playlistModal.style.display = 'none';
+                    promptModal.style.display = 'none';
+                });
+            });
+
+            window.addEventListener('click', function (event) {
+                if (event.target === wordModal) {
+                    wordModal.style.display = 'none';
+                }
+                if (event.target === playlistModal) {
+                    playlistModal.style.display = 'none';
+                }
+                if (event.target === promptModal) {
+                    promptModal.style.display = 'none';
                 }
             });
+
+            saveWordsBtn.addEventListener('click', saveCustomWords);
+            importBtn.addEventListener('click', importFromFile);
+            previewBtn.addEventListener('click', previewSpeech);
+            playAllBtn.addEventListener('click', playAllUnplayed);
+            clearAllBtn.addEventListener('click', clearAllPlaylist);
+            sortWordsBtn.addEventListener('click', sortCustomWords);
             
-            // เริ่มต้น log
-            addLog('ระบบเริ่มทำงาน', 'info');
-            addLog('คำเตือน: ระบบ Google Translate TTS อาจไม่ทำงานบน GitHub Pages หรือบางเบราว์เซอร์เนื่องจาก CORS policy', 'warning');
+            // AI Button Events
+            aiEditBtn.addEventListener('click', processWithAI);
+            aiSummarizeBtn.addEventListener('click', summarizeWithAI);
+            aiMyStyleBtn.addEventListener('click', myStyleWithAI);
+            savePromptsBtn.addEventListener('click', savePrompts);
+            resetPromptsBtn.addEventListener('click', resetPrompts);
+
+            // API Key Events
+            apiKeyInput.addEventListener('input', checkApiKey);
+            apiKeyInput.addEventListener('blur', saveApiKey);
+
+            // อัปเดตสถานะเมื่อมีการเปลี่ยนแปลงข้อความ
+            textInput.addEventListener('input', function () {
+                if (textInput.value.trim()) {
+                    updateStatus('พร้อมอ่านออกเสียง', 'success');
+                } else {
+                    updateStatus('ป้อนข้อความเพื่อเริ่มต้น', '');
+                }
+            });
+
+            previewText.addEventListener('input', function () {
+                if (previewText.value.trim()) {
+                    previewStatus.textContent = 'พร้อมทดสอบเสียง';
+                    previewStatus.className = 'status success';
+                } else {
+                    previewStatus.textContent = 'ป้อนข้อความเพื่อทดสอบ';
+                    previewStatus.className = 'status';
+                }
+            });
+
+            // โหลดข้อมูลเริ่มต้น
+            loadCustomWords();
+            loadPlaylist();
+            loadPrompts();
+            loadModels();
+            loadApiKey();
+            updateStatus('ป้อนข้อความเพื่อเริ่มต้น', '');
+
         });
-    </script>
-</body>
+    </script> 
+</body> 
 </html>
