@@ -1231,7 +1231,7 @@
                         }
                         chunk = text.substring(i, splitPos + 1);
                     }
-                    const trimmedChunk = chunk.trim();
+                    const trimmedChunk = chunk.trim().replace(/[.!?ฯ…”]+$/, '');
                     if (trimmedChunk) {
                         chunks.push(trimmedChunk);
                     }
