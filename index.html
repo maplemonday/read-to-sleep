@@ -5,879 +5,536 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Read to Sleep - Text to Speech</title>
     <style>
-        :root {
-            --bg-primary: #121212;
-            --bg-secondary: #1e1e1e;
-            --bg-tertiary: #2d2d2d;
-            --bg-quaternary: #3d3d3d;
-            --text-primary: #e0e0e0;
-            --text-secondary: #ccc;
-            --accent: #bb86fc;
-            --success: #03dac6;
-            --error: #cf6679;
-            --warning: #ffa000;
-            --info: #1e88e5;
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #1f2937;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #4b5563;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #6b7280;
+        }
+
+        /* Modal animations */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideIn {
+            from { transform: translateY(-20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .modal {
+            animation: fadeIn 0.2s ease-out;
+        }
+
+        .modal-content {
+            animation: slideIn 0.3s ease-out;
         }
 
         /* Tab styles */
-        .tab-container {
-            margin-bottom: 20px;
-        }
-
-        .tab-buttons {
-            display: flex;
-            margin-bottom: 10px;
-            border-bottom: 1px solid #333;
-        }
-
         .tab-btn {
-            padding: 10px 20px;
-            background-color: var(--bg-tertiary);
-            border: none;
-            border-radius: 8px 8px 0 0;
-            cursor: pointer;
-            margin-right: 5px;
-            color: var(--text-primary);
-            transition: all 0.3s ease;
-        }
-
-        .tab-btn:hover {
-            background-color: var(--bg-quaternary);
+            transition: all 0.2s ease;
         }
 
         .tab-btn.active {
-            background-color: var(--accent);
-            color: var(--bg-primary);
-            font-weight: 500;
+            color: #0ea5e9;
+            border-color: #0ea5e9;
         }
 
-        .tab-pane {
-            display: none;
-        }
-
-        .tab-pane.active {
-            display: block;
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            background-color: var(--bg-primary);
-            color: var(--text-primary);
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: top;
-            padding: 20px;
-        }
-
-        .container {
-            width: 100%;
-            max-width: 100%;
-            background-color: var(--bg-secondary);
-            border-radius: 16px;
-            padding: 30px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-        }
-
-        h1 {
-            text-align: center;
-            margin-bottom: 30px;
-            font-weight: 300;
-            color: var(--accent);
-            font-size: 2.2rem;
-        }
-
-        .input-group {
-            margin-bottom: 25px;
-        }
-
-        label {
-            display: block;
-            margin-bottom: 8px;
-            font-size: 1rem;
-            color: var(--text-secondary);
-        }
-
-        textarea {
-            width: 100%;
-            height: 250px;
-            background-color: var(--bg-tertiary);
-            border: 1px solid #333;
-            border-radius: 8px;
-            padding: 15px;
-            color: var(--text-primary);
-            font-size: 1rem;
-            resize: vertical;
-            transition: border-color 0.3s;
-        }
-
-        textarea:focus {
-            outline: none;
-            border-color: var(--accent);
-        }
-
-        .controls {
-            display: flex;
-            gap: 15px;
-            margin-bottom: 25px;
-            flex-wrap: wrap;
-        }
-
+        /* Button hover effects */
         button {
-            background-color: var(--accent);
-            color: var(--bg-primary);
-            border: 1px solid #444;
-            border-radius: 8px;
-            padding: 16px 12px;
-            font-size: 16px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            flex: 1;
-            min-width: 80px;
+            transition: all 0.2s ease;
         }
 
-        button:hover {
-            background-color: #9a67ea;
+        button:hover:not(:disabled) {
             transform: translateY(-2px);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
 
-        button:active {
+        button:active:not(:disabled) {
             transform: translateY(0);
         }
 
         button:disabled {
-            background-color: #444;
+            opacity: 0.6;
             cursor: not-allowed;
             transform: none;
+            box-shadow: none;
         }
 
-        /* ปุ่มที่ใช้โครงสร้างเดียวกับ ai-button */
-        .speak-btn,
-        .word-btn,
-        .playlist-btn,
-        .add-to-playlist-btn,
-        .clear-btn,
-        .paste-btn,
-        .ai-btn,
-        .stop-btn,
-        .previous-btn,
-        .next-btn {
-            background: var(--bg-tertiary);
-            border: 1px solid #444;
-            color: var(--text-primary);
-            padding: 8px 12px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 16px;
-            transition: all 0.2s ease;
-            min-width: 80px;
-            text-align: center;
-        }
-
-        .speak-btn:hover,
-        .word-btn:hover,
-        .playlist-btn:hover,
-        .add-to-playlist-btn:hover,
-        .clear-btn:hover,
-        .paste-btn:hover,
-        .ai-btn:hover,
-        .stop-btn:hover,
-        .previous-btn:hover,
-        .next-btn:hover {
-            background: var(--bg-quaternary);
-            border-color: var(--accent);
-        }
-
+        /* Status indicators */
         .status {
-            display: flex; /* เปิดการใช้ flex */
-            align-items: center; /* จัดกึ่งกลางแนวตั้ง */
-            justify-content: center; /* จัดกึ่งกลางแนวนอน */
-            text-align: center;
-            padding: 20px;
-            border-radius: 8px;
-            background-color: var(--bg-tertiary);
-            font-size: 18px;
-            margin-top: 10px;
-            overflow: hidden;
-            min-height: 100px;
-        }
-
-        .playing {
-            color: var(--success);
-        }
-
-        .error {
-            color: var(--error);
-        }
-
-        .success {
-            color: var(--success);
-        }
-
-        .progress {
-            height: 4px;
-            background-color: #333;
-            border-radius: 2px;
-            overflow: hidden;
-            margin-top: 10px;
-        }
-
-        .progress-bar {
-            height: 100%;
-            background-color: var(--accent);
-            width: 0%;
-            transition: width 0.3s ease;
-        }
-
-        /* Modal Styles */
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.7);
-            z-index: 1000;
+            font-size: 1.5rem;
+            line-height: 1.5;
+            padding: 2rem 1rem;
+            height: calc(1.5em * 3); /* Exactly 3 lines height */
+            display: flex;
+            align-items: center;
             justify-content: center;
-            align-items: center;
-        }
-
-        .modal-content {
-            background-color: var(--bg-secondary);
-            border-radius: 16px;
-            padding: 30px;
-            width: 90%;
-            max-width: 700px;
-            max-height: 90vh;
             overflow-y: auto;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
         }
 
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
+        .status.playing {
+            color: #0ea5e9;
         }
 
-        .modal-header h2 {
-            color: var(--accent);
-            margin: 0;
+        .status.error {
+            color: #ef4444;
         }
 
-        .close {
-            font-size: 2rem;
-            cursor: pointer;
-            color: var(--text-primary);
+        .status.success {
+            color: #10b981;
         }
 
-        .close:hover {
-            color: var(--accent);
+        .status.warning {
+            color: #f59e0b;
         }
 
-        .modal-body {
-            margin-bottom: 25px;
-        }
-
-        .custom-words {
-            width: 100%;
-            height: 200px;
-            background-color: var(--bg-tertiary);
-            border: 1px solid #333;
-            border-radius: 8px;
-            padding: 15px;
-            color: var(--text-primary);
-            font-size: 1rem;
-            resize: vertical;
-            margin-bottom: 15px;
-        }
-
-        .file-input {
-            margin-bottom: 15px;
-        }
-
-        .preview-section {
-            margin-top: 20px;
-            padding: 15px;
-            background-color: var(--bg-tertiary);
-            border-radius: 8px;
-
-            display: flex;              /* เพิ่ม flex */
-            align-items: center;        /* จัดให้อยู่กึ่งกลางแนวตั้ง */
-            gap: 10px;                  /* ช่องว่างระหว่าง input กับ button */
-        }
-
-        .preview-input {
-            flex: 1;                    /* ให้ input ขยายพื้นที่ */
-            padding: 10px;
-            border-radius: 8px;
-            border: 1px solid #333;
-            background-color: var(--bg-quaternary);
-            color: var(--text-primary);
-            margin-bottom: 0;           /* ลบ margin-bottom เดิมออก */
-        }
-
-        .preview-btn {
-            background-color: var(--success);
-            color: var(--bg-primary);
-            border: none;
-            border-radius: 8px;
-            padding: 10px 12px; /* ปรับ padding แนวนอนให้เล็กลง */
-            font-size: 1rem;
-            font-weight: 500;
-            width: auto;         /* ให้กว้างตามเนื้อหา */
-            white-space: nowrap; /* ป้องกันไม่ให้ขึ้นบรรทัดใหม่ */
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .preview-btn:hover {
-            background-color: #00b3a0;
-        }
-
-        .preview-btn:disabled {
-            background-color: #444;
-            cursor: not-allowed;
-        }
-
-        /* Playlist Styles */
-        .playlist-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 10px;
-            background-color: var(--bg-tertiary);
-            border-radius: 8px;
-            margin-bottom: 10px;
-            transition: background-color 0.3s ease;
-        }
-
+        /* Playlist item styles */
         .playlist-item.played {
-            background-color: var(--bg-quaternary);
             opacity: 0.7;
         }
 
-        .playlist-item button {
-            padding: 5px 10px;
-            min-width: auto;
-            font-size: 0.9rem;
+        .playlist-item.played .playlist-title {
+            text-decoration: line-through;
         }
 
-        .playlist-number {
-            font-weight: bold;
-            color: var(--accent);
-            margin-right: 10px;
-            min-width: 30px;
-        }
-
-        .playlist-title {
-            flex: 1;
-            margin-right: 10px;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        .playlist-actions {
-            display: flex;
-            gap: 5px;
-        }
-
-        .play-btn {
-            background-color: var(--success);
-            padding: 5px 10px;
-        }
-
-        .delete-btn {
-            background-color: var(--error);
-            padding: 5px 10px;
-        }
-
-        .unread-btn {
-            background-color: var(--warning);
-            padding: 5px 10px;
-        }
-
-        .playlist-input {
-            width: 100%;
-            padding: 10px;
-            border-radius: 8px;
-            border: 1px solid #333;
-            background-color: var(--bg-quaternary);
-            color: var(--text-primary);
-            margin-bottom: 15px;
-        }
-
-        .empty-playlist {
-            text-align: center;
-            padding: 20px;
-            color: var(--text-secondary);
-        }
-
-        .play-all-section {
-            margin-bottom: 20px;
-            text-align: center;
-            display: flex;
-            gap: 10px;
-            justify-content: center;
-        }
-
-        .play-all-btn {
-            background-color: var(--success);
-            color: var(--bg-primary);
-            border: none;
-            border-radius: 8px;
-            padding: 10px 20px;
-            font-size: 1rem;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .play-all-btn:hover {
-            background-color: #00b3a0;
-        }
-
-        .play-all-btn:disabled {
-            background-color: #444;
-            cursor: not-allowed;
-        }
-
-        .clear-all-btn {
-            background-color: var(--error);
-            color: var(--bg-primary);
-            border: none;
-            border-radius: 8px;
-            padding: 10px 20px;
-            font-size: 1rem;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .clear-all-btn:hover {
-            background-color: #b05060;
-        }
-
-        .clear-all-btn:disabled {
-            background-color: #444;
-            cursor: not-allowed;
-        }
-
-        .sort-btn {
-            background-color: #6200ee;
-            color: #fff;
-            border: none;
-            border-radius: 8px;
-            padding: 10px 20px;
-            font-size: 1rem;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            margin-left: 10px;
-        }
-
-        .sort-btn:hover {
-            background-color: #3700b3;
-        }
-
-        .button-group {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 15px;
-        }
-
-        /* AI Section Styles */
-        .ai-block {
-            display: flex;
-            gap: 10px;
-            align-items: center;
-            flex-wrap: wrap;
-            margin-top: 20px;
-            padding: 15px;
-            background-color: var(--bg-tertiary);
-            border-radius: 8px;
-        }
-
-        .ai-input-container {
-            position: relative;
-            flex: 3;
-            min-width: 150px;
-        }
-
-        .ai-input {
-            width: 100%;
-            background: var(--bg-tertiary);
-            border: 1px solid #444;
-            border-radius: 8px;
-            color: var(--text-primary);
-            padding: 8px 30px 8px 8px;
-            font-size: 13px;
-        }
-
-        .ai-input:focus {
-            outline: none;
-            border-color: var(--accent);
-        }
-
-        .api-status {
-            position: absolute;
-            right: 8px;
-            top: 50%;
-            transform: translateY(-50%);
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-            background-color: #666;
-        }
-
-        .api-status.ok {
-            background-color: var(--success);
-        }
-
-        .ai-model-select {
-            background: var(--bg-tertiary);
-            border: 1px solid #444;
-            border-radius: 8px;
-            color: var(--text-primary);
-            padding: 8px;
-            font-size: 13px;
-            flex: 2;
-            min-width: 120px;
-        }
-
-        .ai-model-select:focus {
-            outline: none;
-            border-color: var(--accent);
-        }
-
-        .ai-model-select:disabled {
-            background: var(--bg-quaternary);
-            color: var(--text-secondary);
-        }
-
-        .ai-buttons {
-            display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
-            width: 100%;
-            margin-top: 10px;
-        }
-
-        .ai-button {
-            background: var(--bg-tertiary);
-            border: 1px solid #444;
-            color: var(--text-primary);
-            padding: 8px 12px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 13px;
-            transition: all 0.2s ease;
-            min-width: 80px;
-            text-align: center;
-        }
-
-        .ai-button:hover {
-            background: var(--bg-quaternary);
-            border-color: var(--accent);
-        }
-
-        .ai-button.active {
-            background: var(--accent);
-            border-color: var(--accent);
-        }
-
-        .ai-button:disabled {
-            background: #666;
-            cursor: not-allowed;
-        }
-
-        .prompt-textarea {
-            width: 100%;
-            height: 200px;
-            background-color: var(--bg-tertiary);
-            border: 1px solid #333;
-            border-radius: 8px;
-            padding: 15px;
-            color: var(--text-primary);
-            font-size: 1rem;
-            resize: vertical;
-            margin-bottom: 15px;
-        }
-
-        .prompt-buttons {
-            display: flex;
-            gap: 10px;
-            justify-content: flex-end;
-        }
-
-        .reset-prompt-btn {
-            background-color: var(--error);
-            color: var(--bg-primary);
-            border: none;
-            border-radius: 8px;
-            padding: 10px 20px;
-            font-size: 1rem;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .reset-prompt-btn:hover {
-            background-color: #b05060;
-        }
-
-        @media (max-width: 600px) {
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
             .container {
-                padding: 20px;
+                padding: 1rem;
             }
             
             h1 {
-                font-size: 1.8rem;
+                font-size: 2rem;
             }
             
-            .controls {
-                flex-direction: column;
+            .grid.grid-cols-2 {
+                grid-template-columns: 1fr;
             }
             
-            .modal-content {
-                padding: 20px;
+            .flex.flex-wrap.gap-3 > * {
+                flex: 1 1 45%;
+            }
+
+            .status {
+                font-size: 1.5rem;
+                padding: 1.5rem 1rem;
+                height: calc(1.5em * 3);
+            }
+        }
+
+        @media (max-width: 480px) {
+            .flex.flex-wrap.gap-3 > * {
+                flex: 1 1 100%;
+            }
+
+            .status {
+                font-size: 1.25rem;
+                padding: 1.25rem 1rem;
+                height: calc(1.5em * 3);
             }
             
-            .playlist-item {
-                flex-direction: column;
-                align-items: flex-start;
-            }
-            
-            .playlist-actions {
-                width: 100%;
-                justify-content: flex-end;
-                margin-top: 10px;
-            }
-            
-            .play-all-section {
-                flex-direction: column;
-                align-items: center;
-            }
-            
-            .button-group {
-                flex-direction: column;
-            }
-            
-            .ai-block {
-                flex-direction: column;
-                align-items: stretch;
-            }
-            
-            .ai-input-container, .ai-model-select {
-                width: 100%;
-            }
-            
-            .prompt-buttons {
-                flex-direction: column;
+            .grid.grid-cols-2 {
+                grid-template-columns: 1fr;
             }
         }
     </style>
+    <!-- <script src="https://cdn.tailwindcss.com"></script> -->
+    <script src="https://cdn.tailwindcss.com?plugins=forms,typography,aspect-ratio"></script>
+    <script src="https://unpkg.com/feather-icons"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            200: '#bae6fd',
+                            300: '#7dd3fc',
+                            400: '#38bdf8',
+                            500: '#0ea5e9',
+                            600: '#0284c7',
+                            700: '#0369a1',
+                            800: '#075985',
+                            900: '#0c4a6e',
+                        },
+                        secondary: {
+                            50: '#f5f3ff',
+                            100: '#ede9fe',
+                            200: '#ddd6fe',
+                            300: '#c4b5fd',
+                            400: '#a78bfa',
+                            500: '#8b5cf6',
+                            600: '#7c3aed',
+                            700: '#6d28d9',
+                            800: '#5b21b6',
+                            900: '#4c1d95',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
 </head>
-<body>
-    <div class="container">
-        <h1>Read to Sleep</h1>
-        
-        <div class="input-group">
-            <!-- <label for="text">เนื้อเรื่อง:</label> -->
-            <textarea id="text" placeholder="ข้อความที่ต้องการให้อ่านออกเสียง..."></textarea>
-        </div>
-        
-        <div class="controls">
-            <button id="speakBtn">อ่าน</button>
-            <button id="stopBtn" class="stop-btn" disabled>ยกเลิก</button>
-            <button id="previousBtn" class="previous-btn" disabled>ก่อนหน้า</button>
-            <button id="nextBtn" class="next-btn" disabled>ถัดไป</button>
-            <button id="pasteBtn" class="paste-btn">วางข้อความ</button>
-            <button id="clearBtn" class="clear-btn">ล้างข้อความ</button>
-            <button id="wordBtn" class="word-btn">Custom Word</button>
-            <button id="addToPlaylistMainBtn" class="add-to-playlist-btn">เพิ่ม Playlist</button>
-            <button id="playlistBtn" class="playlist-btn">Playlist</button>
-        </div>
+<body class="bg-gray-900 text-gray-100 min-h-screen">
+    <div class="container mx-auto px-4 py-8 max-w-4xl">
+        <header class="text-center mb-12">
+            <h1 class="text-4xl md:text-5xl font-bold bg-gradient-to-r from-primary-400 to-secondary-400 bg-clip-text text-transparent">
+                Read to Sleep
+            </h1>
+            <p class="text-gray-400 mt-2">อ่านนิยายจีน..จนกว่าคุณจะหลับ</p>
+        </header>
 
-        <!-- AI Section with new layout -->
-        <div class="ai-block">
-            <div class="ai-input-container">
-                <input type="password" id="apiKey" class="ai-input" placeholder="API Key">
-                <div id="apiStatus" class="api-status ok"></div>
-            </div>
-            <select id="modelSelect" class="ai-model-select">
-                <option value="gemini-2.5-flash">gemini-2.5-flash</option>
-                <option value="gemini-2.0-flash">gemini-2.0-flash</option>
-                <option value="gemini-1.5-flash">gemini-1.5-flash</option>
-                <option value="gemini-1.5-pro">gemini-1.5-pro</option>
-                <option value="gemini-1.0-pro">gemini-1.0-pro</option>
-            </select>
-            <div class="ai-buttons">
-                <button id="aiEditBtn" class="ai-button">AI จัดคำ</button>
-                <button id="aiSummarizeBtn" class="ai-button">AI สรุป</button>
-                <button id="aiMyStyleBtn" class="ai-button">AI สั้น</button>
-                <button id="promptBtn" class="ai-button">Prompt</button>
-            </div>
-        </div>
+        <main>
+            <!-- Text Input Section -->
+            <section class="mb-4">
+                <div class="bg-gray-800 rounded-xl p-6 shadow-lg">
+                    <div class="mb-4">
+                        <div class="flex items-center justify-between mb-4">
+                            <h2 class="text-xl font-semibold flex items-center gap-2">
+                                <i data-feather="file-text" class="w-5 h-5"></i>
+                                เนื้อเรื่อง
+                            </h2>
+                            <div class="flex gap-2">
+                                <button id="pasteBtn" class="px-3 py-1.5 bg-gray-800 hover:bg-gray-700 rounded-lg transition-colors text-sm flex items-center gap-1">
+                                    <i data-feather="clipboard" class="w-4 h-4"></i>
+                                    วาง
+                                </button>
+                                <button id="clearBtn" class="px-3 py-1.5 bg-gray-800 hover:bg-gray-700 rounded-lg transition-colors text-sm flex items-center gap-1">
+                                    <i data-feather="trash-2" class="w-4 h-4"></i>
+                                    ล้าง
+                                </button>
+                            </div>
+                        </div>
+                        <textarea 
+                            id="text" 
+                            class="w-full h-64 bg-gray-700 border border-gray-600 rounded-lg p-4 text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none"
+                            placeholder="บทความที่ต้องการให้อ่านออกเสียง..."></textarea>
+                    </div>
 
-        <div class="progress">
-            <div id="progressBar" class="progress-bar"></div>
-        </div>
+                    <div class="flex flex-wrap gap-3">
+                        <button id="speakBtn" class="flex-1 min-w-[120px] bg-primary-600 hover:bg-primary-700 text-white py-3 px-4 rounded-lg transition duration-200 flex items-center justify-center gap-2">
+                            <i data-feather="play"></i> อ่าน
+                        </button>
+                        <button id="stopBtn" class="flex-1 min-w-[120px] bg-red-600 hover:bg-red-700 text-white py-3 px-4 rounded-lg transition duration-200 flex items-center justify-center gap-2" disabled>
+                            <i data-feather="square"></i> ยกเลิก
+                        </button>
+                        <button id="previousBtn" class="flex-1 min-w-[120px] bg-gray-700 hover:bg-gray-600 text-white py-3 px-4 rounded-lg transition duration-200 flex items-center justify-center gap-2" disabled>
+                            <i data-feather="skip-back"></i> ก่อนหน้า
+                        </button>
+                        <button id="nextBtn" class="flex-1 min-w-[120px] bg-gray-700 hover:bg-gray-600 text-white py-3 px-4 rounded-lg transition duration-200 flex items-center justify-center gap-2" disabled>
+                            <i data-feather="skip-forward"></i> ถัดไป
+                        </button>
+                    </div>
+                </div>
+            </section>
 
-        <div id="status" class="status">
-            ป้อนข้อความเพื่อเริ่มต้น
-        </div>
-        
+            <!-- Action Buttons -->
+            <section class="mb-4">
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+                    <button id="wordBtn" class="bg-gray-800 hover:bg-gray-700 text-gray-200 py-3 px-4 rounded-lg transition duration-200 flex items-center justify-center gap-2">
+                        <i data-feather="edit-3"></i> Custom Word
+                    </button>
+                    <button id="addToPlaylistMainBtn" class="bg-gray-800 hover:bg-gray-700 text-gray-200 py-3 px-4 rounded-lg transition duration-200 flex items-center justify-center gap-2">
+                        <i data-feather="plus-circle"></i> เพิ่ม Playlist
+                    </button>
+                    <button id="playlistBtn" class="bg-gray-800 hover:bg-gray-700 text-gray-200 py-3 px-4 rounded-lg transition duration-200 flex items-center justify-center gap-2">
+                        <i data-feather="list"></i> Playlist
+                    </button>
+                    <button id="settingBtn" class="bg-gray-800 hover:bg-gray-700 text-gray-200 py-3 px-4 rounded-lg transition duration-200 flex items-center justify-center gap-2">
+                        <i data-feather="settings"></i> Setting
+                    </button>
+                </div>
+            </section>
+
+            <!-- AI Section -->
+            <section class="mb-4">
+                <div class="bg-gray-800 rounded-xl p-6 shadow-lg">
+                    <!-- <h2 class="text-xl font-semibold mb-4 text-gray-200">AI Assistant</h2> -->
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                        <div class="relative">
+                            <input 
+                                type="password" 
+                                id="apiKey" 
+                                class="w-full bg-gray-700 border border-gray-600 rounded-lg py-3 px-4 text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent pr-10"
+                                placeholder="API Key">
+                            <div id="apiStatus" class="absolute right-3 top-1/2 transform -translate-y-1/2 w-3 h-3 rounded-full bg-green-500"></div>
+                        </div>
+                        
+                        <select id="modelSelect" class="bg-gray-700 border border-gray-600 rounded-lg py-3 px-4 text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent">
+                            <option value="gemini-2.5-flash">gemini-2.5-flash</option>
+                            <option value="gemini-2.0-flash">gemini-2.0-flash</option>
+                            <option value="gemini-1.5-flash">gemini-1.5-flash</option>
+                            <option value="gemini-1.5-pro">gemini-1.5-pro</option>
+                            <option value="gemini-1.0-pro">gemini-1.0-pro</option>
+                        </select>
+                        
+                        <button id="promptBtn" class="bg-gray-700 hover:bg-gray-600 text-gray-200 py-3 px-4 rounded-lg transition duration-200 flex items-center justify-center gap-2">
+                            <i data-feather="settings"></i> Prompt
+                        </button>
+                    </div>
+                    
+                    <div class="grid gap-4 grid-cols-[repeat(auto-fit,minmax(150px,1fr))]">
+                        <button id="aiEditBtn" class="bg-gray-700 hover:bg-gray-600 text-gray-200 py-3 px-4 rounded-lg transition duration-200 flex items-center justify-center gap-2">
+                            <i data-feather="edit"></i> AI จัดคำ
+                        </button>
+                        <button id="aiSummarizeBtn" class="bg-gray-700 hover:bg-gray-600 text-gray-200 py-3 px-4 rounded-lg transition duration-200 flex items-center justify-center gap-2">
+                            <i data-feather="file-text"></i> AI สรุป
+                        </button>
+                        <button id="aiMyStyleBtn" class="bg-gray-700 hover:bg-gray-600 text-gray-200 py-3 px-4 rounded-lg transition duration-200 flex items-center justify-center gap-2">
+                            <i data-feather="type"></i> AI สั้น
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Progress and Status -->
+            <section class="mb-4">
+                <div class="bg-gray-800 rounded-xl p-6 shadow-lg">
+                    <div class="text-sm text-gray-400 text-center mb-2">
+                        <span id="progressText">0/0</span>
+                    </div>
+                    <div class="w-full bg-gray-700 rounded-full h-2.5 mb-6">
+                        <div id="progressBar" class="bg-primary-500 h-2.5 rounded-full" style="width: 0%"></div>
+                    </div>
+                    <div id="status" class="text-center text-gray-300 status">
+                        ป้อนข้อความเพื่อเริ่มต้น
+                    </div>
+                </div>
+            </section>
+        </main>
     </div>
 
     <!-- Custom Words Modal -->
-    <div id="wordModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>Custom Words</h2>
-                <span class="close">&times;</span>
-            </div>
-            <div class="modal-body">
-                <!-- <p>กำหนดคำที่ต้องการแทนที่ในรูปแบบ: คำเดิม;คำใหม่ (หนึ่งคู่ต่อหนึ่งบรรทัด)</p> -->
-                <textarea id="customWords" class="custom-words" placeholder="ตัวอย่าง:
+    <div id="wordModal" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center p-4 z-50 hidden">
+        <div class="bg-gray-800 rounded-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <div class="p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-2xl font-bold text-gray-100">Custom Words</h2>
+                    <button id="closeWordModal" class="text-gray-400 hover:text-white">
+                        <i data-feather="x"></i>
+                    </button>
+                </div>
+                
+                <div class="mb-4">
+                    <textarea 
+                        id="customWords" 
+                        class="w-full h-48 bg-gray-700 border border-gray-600 rounded-lg p-4 text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none"
+                        placeholder="ตัวอย่าง:
 กรุงเทพฯ;กรุงเทพมหานคร
 รพ.;โรงพยาบาล
 ดร.;ดอกเตอร์"></textarea>
-                
-                <div class="file-input">
-                    <input type="file" id="importFile" accept=".txt">
-                    <button id="importBtn">นำเข้าจากไฟล์</button>
                 </div>
                 
-                <div class="button-group">
-                    <button id="saveWordsBtn">บันทึก</button>
-                    <button id="sortWordsBtn" class="sort-btn">Sort</button>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                    <div class="flex items-center gap-2">
+                        <input type="file" id="importFile" accept=".txt" class="hidden">
+                        <button id="importBtn" class="bg-gray-700 hover:bg-gray-600 text-gray-200 py-2 px-4 rounded-lg transition duration-200 flex-1">
+                            นำเข้าจากไฟล์
+                        </button>
+                    </div>
+                    <div class="flex gap-2">
+                        <button id="saveWordsBtn" class="bg-primary-600 hover:bg-primary-700 text-white py-2 px-4 rounded-lg transition duration-200 flex-1">
+                            บันทึก
+                        </button>
+                        <button id="sortWordsBtn" class="bg-secondary-600 hover:bg-secondary-700 text-white py-2 px-4 rounded-lg transition duration-200">
+                            Sort
+                        </button>
+                    </div>
                 </div>
                 
-                <div class="preview-section">
-                    <!-- <h3>ทดสอบเสียง</h3> -->
-                    <input type="text" id="previewText" class="preview-input" placeholder="พิมพ์ข้อความเพื่อทดสอบเสียง...">
-                    <button id="previewBtn" class="preview-btn">ทดสอบเสียง</button>
-                    <!-- <div id="previewStatus" class="status">ป้อนข้อความเพื่อทดสอบ</div> -->
+                <div class="bg-gray-700 rounded-lg p-4">
+                    <h3 class="text-lg font-medium text-gray-200 mb-3">ทดสอบเสียง</h3>
+                    <div class="flex gap-2">
+                        <input 
+                            type="text" 
+                            id="previewText" 
+                            class="flex-1 bg-gray-600 border border-gray-500 rounded-lg py-2 px-4 text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                            placeholder="พิมพ์ข้อความเพื่อทดสอบเสียง...">
+                        <button id="previewBtn" class="bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded-lg transition duration-200">
+                            ทดสอบเสียง
+                        </button>
+                    </div>
+                    <!-- <div id="previewStatus" class="mt-3 text-center py-2 text-gray-300">
+                        ป้อนข้อความเพื่อทดสอบ
+                    </div> -->
                 </div>
             </div>
         </div>
     </div>
 
     <!-- Playlist Modal -->
-    <div id="playlistModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>Playlist</h2>
-                <span class="close">&times;</span>
-            </div>
-            <div class="modal-body">
-                <div class="play-all-section">
-                    <button id="playAllBtn" class="play-all-btn">Play All Unplayed</button>
-                    <button id="clearAllBtn" class="clear-all-btn">Clear All List</button>
+    <div id="playlistModal" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center p-4 z-50 hidden">
+        <div class="bg-gray-800 rounded-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <div class="p-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold text-gray-100">Playlist</h2>
+                    <button id="closePlaylistModal" class="text-gray-400 hover:text-white">
+                        <i data-feather="x"></i>
+                    </button>
                 </div>
-                <div id="playlistItems">
-                    <div class="empty-playlist">ไม่มีรายการใน Playlist</div>
+                
+                <div class="flex flex-wrap gap-3 mb-6 items-center justify-center">
+                    <button id="playAllBtn" class="bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded-lg transition duration-200 flex items-center gap-2">
+                        <i data-feather="play"></i> Play All Unplayed
+                    </button>
+                    <button id="clearAllBtn" class="bg-red-600 hover:bg-red-700 text-white py-2 px-4 rounded-lg transition duration-200 flex items-center gap-2">
+                        <i data-feather="trash-2"></i> Clear All List
+                    </button>
+                </div>
+                
+                <div id="playlistItems" class="space-y-3">
+                    <div class="text-center py-8 text-gray-400">
+                        ไม่มีรายการใน Playlist
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Prompt Modal -->
-    <div id="promptModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>ปรับแต่ง Prompt</h2>
-                <span class="close">&times;</span>
+    <!-- Settings Modal -->
+    <div id="settingsModal" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center p-4 z-50 hidden">
+    <div class="bg-gray-800 rounded-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+        <div class="p-6">
+        <div class="flex justify-between items-center mb-6">
+            <h2 class="text-2xl font-bold text-gray-100">ตั้งค่า (Settings)</h2>
+            <button id="closeSettingsModal" class="text-gray-400 hover:text-white">
+            <i data-feather="x" class="w-5 h-5"></i>
+            </button>
+        </div>
+
+        <!-- ความเร็วอ่าน -->
+        <div class="mb-4">
+        <label for="speechSpeed" class="block text-gray-300 mb-2">ความเร็วอ่าน:</label>
+        <input type="range" id="speechSpeed" min="0.5" max="2" step="0.05" value="1.35"
+                class="w-full bg-gray-700 border border-gray-600 rounded-lg h-2 appearance-none accent-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent">
+            <div class="flex justify-between text-xs text-gray-400 mt-1">
+                <span>0.5×</span>
+                <span id="speechSpeedValue">1.35×</span>
+                <span>2.0×</span>
             </div>
-            <div class="modal-body">
-                <div class="tab-container">
-                    <div class="tab-buttons">
-                        <button class="tab-btn active" data-tab="edit-tab">AI จัดคำ</button>
-                        <button class="tab-btn" data-tab="summarize-tab">AI สรุป</button>
-                        <button class="tab-btn" data-tab="mystyle-tab">AI สั้น</button>
+        </div>
+
+        <!-- จำนวนต่อ chunk -->
+        <div class="mb-4">
+        <label for="chunkSize" class="block text-gray-300 mb-2">จำนวนต่อ chunk (คำ):</label>
+        <input type="number" id="chunkSize" min="1" max="1000" step="1" value="120"
+                class="w-full bg-gray-700 border border-gray-600 rounded-lg py-3 px-4 text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent">
+        <div class="text-xs text-gray-400 mt-1">กำหนดจำนวนคำต่อครั้งก่อนอ่าน</div>
+        </div>
+
+        <div class="flex flex-wrap gap-3 mt-6">
+            <button id="saveSettingsBtn" class="flex-1 bg-primary-600 hover:bg-primary-700 text-white py-2 px-4 rounded-lg transition duration-200">
+            บันทึก
+            </button>
+            <button id="resetSettingsBtn" class="flex-1 bg-red-600 hover:bg-red-700 text-white py-2 px-4 rounded-lg transition duration-200">
+            รีเซ็ตค่า
+            </button>
+        </div>
+
+        </div>
+    </div>
+    </div>
+
+    <!-- Prompt Modal -->
+    <div id="promptModal" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center p-4 z-50 hidden">
+        <div class="bg-gray-800 rounded-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <div class="p-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold text-gray-100">ปรับแต่ง Prompt</h2>
+                    <button id="closePromptModal" class="text-gray-400 hover:text-white">
+                        <i data-feather="x"></i>
+                    </button>
+                </div>
+                
+                <div class="mb-6">
+                    <div class="flex border-b border-gray-700">
+                        <button class="tab-btn active py-3 px-6 text-gray-300 hover:text-white border-b-2 border-primary-500" data-tab="edit-tab">
+                            AI จัดคำ
+                        </button>
+                        <button class="tab-btn py-3 px-6 text-gray-300 hover:text-white" data-tab="summarize-tab">
+                            AI สรุป
+                        </button>
+                        <button class="tab-btn py-3 px-6 text-gray-300 hover:text-white" data-tab="mystyle-tab">
+                            AI สั้น
+                        </button>
                     </div>
                     
-                    <div class="tab-content">
+                    <div class="mt-4">
                         <div id="edit-tab" class="tab-pane active">
-                            <textarea id="editPrompt" class="prompt-textarea"></textarea>
+                            <textarea 
+                                id="editPrompt" 
+                                class="w-full h-48 bg-gray-700 border border-gray-600 rounded-lg p-4 text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none"></textarea>
                         </div>
-                        <div id="summarize-tab" class="tab-pane">
-                            <textarea id="summarizePrompt" class="prompt-textarea"></textarea>
+                        <div id="summarize-tab" class="tab-pane hidden">
+                            <textarea 
+                                id="summarizePrompt" 
+                                class="w-full h-48 bg-gray-700 border border-gray-600 rounded-lg p-4 text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none"></textarea>
                         </div>
-                        <div id="mystyle-tab" class="tab-pane">
-                            <textarea id="mystylePrompt" class="prompt-textarea"></textarea>
+                        <div id="mystyle-tab" class="tab-pane hidden">
+                            <textarea 
+                                id="mystylePrompt" 
+                                class="w-full h-48 bg-gray-700 border border-gray-600 rounded-lg p-4 text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none"></textarea>
                         </div>
                     </div>
                 </div>
                 
-                <div class="prompt-buttons">
-                    <button id="resetPromptsBtn" class="reset-prompt-btn">ล้าง Prompt</button>
-                    <button id="savePromptsBtn">บันทึก Prompt</button>
+                <div class="flex flex-wrap gap-3">
+                    <button id="resetPromptsBtn" class="bg-red-600 hover:bg-red-700 text-white py-2 px-4 rounded-lg transition duration-200 flex-1">
+                        ล้าง Prompt
+                    </button>
+                    <button id="savePromptsBtn" class="bg-primary-600 hover:bg-primary-700 text-white py-2 px-4 rounded-lg transition duration-200 flex-1">
+                        บันทึก Prompt
+                    </button>
                 </div>
             </div>
         </div>
     </div>
-
     <script>
-        // Tab switching functionality
         function setupTabs() {
-            const tabBtns = document.querySelectorAll('.tab-btn');
+            const tabButtons = document.querySelectorAll('.tab-btn');
             const tabPanes = document.querySelectorAll('.tab-pane');
 
-            tabBtns.forEach(btn => {
-                btn.addEventListener('click', () => {
-                    // Remove active class from all buttons and panes
-                    tabBtns.forEach(b => b.classList.remove('active'));
-                    tabPanes.forEach(p => p.classList.remove('active'));
+            tabButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    const tabId = button.getAttribute('data-tab');
 
-                    // Add active class to clicked button and corresponding pane
-                    btn.classList.add('active');
-                    const tabId = btn.getAttribute('data-tab');
-                    document.getElementById(tabId).classList.add('active');
+                    // Deactivate all tabs and panes
+                    tabButtons.forEach(btn => {
+                        btn.classList.remove('active');
+                        // Assuming inactive tabs have a transparent border or you can set it to the default gray from your CSS
+                        btn.style.borderColor = 'transparent'; 
+                    });
+                    tabPanes.forEach(pane => {
+                        pane.classList.remove('active');
+                        pane.classList.add('hidden');
+                    });
+
+                    // Activate the clicked tab and pane
+                    button.classList.add('active');
+                    // Using the primary color from your tailwind config
+                    button.style.borderColor = '#0ea5e9'; 
+                    const activePane = document.getElementById(tabId);
+                    if (activePane) {
+                        activePane.classList.add('active');
+                        activePane.classList.remove('hidden');
+                    }
                 });
             });
-        }
-
-        // Simple Thai word segmentation function
-        function simpleThaiSegment(text) {
-            // This is a simplified version - in a real application, you would use a proper Thai segmentation library
-            const words = [];
-            let currentWord = '';
-            
-            for (let i = 0; i < text.length; i++) {
-                const char = text[i];
-                // Check if character is Thai
-                if (/[\u0E00-\u0E7F]/.test(char)) {
-                    currentWord += char;
-                } else if (/\s/.test(char)) {
-                    if (currentWord) {
-                        words.push(currentWord);
-                        currentWord = '';
-                    }
-                } else {
-                    // Non-Thai characters (English, numbers, etc.)
-                    if (currentWord) {
-                        words.push(currentWord);
-                        currentWord = '';
-                    }
-                    words.push(char);
-                }
-            }
-            
-            if (currentWord) {
-                words.push(currentWord);
-            }
-            
-            return words;
         }
 
         document.addEventListener('DOMContentLoaded', function() {
@@ -912,7 +569,9 @@
             const wordModal = document.getElementById('wordModal');
             const playlistModal = document.getElementById('playlistModal');
             const promptModal = document.getElementById('promptModal');
-            const closeButtons = document.querySelectorAll('.close');
+            const closeWordModal = document.getElementById('closeWordModal');
+            const closePlaylistModal = document.getElementById('closePlaylistModal');
+            const closePromptModal = document.getElementById('closePromptModal');
             const customWordsTextarea = document.getElementById('customWords');
             const saveWordsBtn = document.getElementById('saveWordsBtn');
             const importFileInput = document.getElementById('importFile');
@@ -922,6 +581,16 @@
             const previewStatus = document.getElementById('previewStatus');
             const sortWordsBtn = document.getElementById('sortWordsBtn');
             
+            // Settings Modal Elements
+            const settingBtn = document.getElementById('settingBtn');
+            const settingsModal = document.getElementById('settingsModal');
+            const closeSettingsModal = document.getElementById('closeSettingsModal');
+            const speechSpeed = document.getElementById('speechSpeed');
+            const speechSpeedValue = document.getElementById('speechSpeedValue');
+            const chunkSize = document.getElementById('chunkSize');
+            const saveSettingsBtn = document.getElementById('saveSettingsBtn');
+            const resetSettingsBtn = document.getElementById('resetSettingsBtn');
+
             // Prompt Modal Elements
             const editPromptTextarea = document.getElementById('editPrompt');
             const summarizePromptTextarea = document.getElementById('summarizePrompt');
@@ -947,39 +616,40 @@
             let currentAudio = null; // ตัวแปรเก็บ audio ปัจจุบัน
             let chunksForDisplay = []; // เก็บ chunks สำหรับแสดงใน live text
             let isLocalProxyAvailable = true; // Assume local proxy is available by default
+            let playAllQueue = []; // Queue for items to play when "Play All Unplayed" is active
             
             // Default prompts
             const defaultPrompts = {
-                edit: `กรุณาช่วยจัดรูปแบบข้อความนิยายจีนให้เป็น style การเล่านิยายจีนเรื่อง "กระบี่​จง​มา/​剑来/Jian Lai/SwordComing" ดังนี้:                 
-1. แบ่งข้อความเป็นประโยคยืดหยุ่น (grammar-aware chunks) โดยไม่กำหนดจำนวนคำตายตัว
-2. ตรวจและแก้ไขคำผิด (grammar correction)
-3. แบ่งวรรค (punctuation-aware chunking) ให้ถูกต้อง
-4. จำกัดความยาว chunk ไม่เกิน 170 ตัวอักษร ตามความเหมาะสม
-5. แก้ไขปัญหาการตัดคำผิดพลาด และประโยคยาวเกินไป
-6. ป้องกันการตัดคำกลางประโยคที่ทำให้ความหมายเปลี่ยน
-7. ต้องลบสัญลักษณ์ เช่น ? " ... ! * ( ) ฯลฯ อื่นๆ ที่จะทำให้ google translate อ่านผิด ตีความผิด โดยให้คงข้อความเดิมไว้
-8. รักษาภาษาต้นฉบับไว้ พร้อมทั้งเว้นวรรคให้เหมาะสมกับการอ่าน
-6. ให้เริ่มเรื่องเลย ไม่ต้องทวนคำถาม
+                edit: `กรุณาช่วยจัดรูปแบบข้อความนิยายจีนให้เป็น style การเล่านิยายจีนเรื่อง \"กระบี่​จง​มา/​剑来/Jian Lai/SwordComing\" ดังนี้:                 
+        1. แบ่งข้อความเป็นประโยคยืดหยุ่น (grammar-aware chunks) โดยไม่กำหนดจำนวนคำตายตัว
+        2. ตรวจและแก้ไขคำผิด (grammar correction)
+        3. แบ่งวรรค (punctuation-aware chunking) ให้ถูกต้อง
+        4. จำกัดความยาว chunk ไม่เกิน 170 ตัวอักษร ตามความเหมาะสม
+        5. แก้ไขปัญหาการตัดคำผิดพลาด และประโยคยาวเกินไป
+        6. ป้องกันการตัดคำกลางประโยคที่ทำให้ความหมายเปลี่ยน
+        7. ต้องลบสัญลักษณ์ เช่น ? \" ... ! * ( ) ฯลฯ อื่นๆ ที่จะทำให้ google translate อ่านผิด ตีความผิด โดยให้คงข้อความเดิมไว้
+        8. รักษาภาษาต้นฉบับไว้ พร้อมทั้งเว้นวรรคให้เหมาะสมกับการอ่าน
+        6. ให้เริ่มเรื่องเลย ไม่ต้องทวนคำถาม
 
-ข้อความที่ต้องประมวลผล:`,
-                summarize: `กรุณาช่วยเรียบเรียงใหม่และเล่าแบบสรุปความของข้อความนิยายจีนเรื่อง "กระบี่​จง​มา/​剑来/Jian Lai/SwordComing" ให้ครบถ้วนและละเอียด โดย:
-1. สรุปเนื้อหาสำคัญทั้งหมดโดยละเอียด
-2. รักษาลำดับเหตุการณ์และความต่อเนื่อง
-3. ใช้ภาษาที่เข้าใจง่ายและเหมาะสมกับการอ่านออกเสียง
-4. แบ่งเป็นประโยคสั้นๆ ที่เหมาะสมกับการอ่าน
-5. รักษาความเป็นนิยายไว้
-6. ให้เริ่มเรื่องเลย ไม่ต้องทวนคำถาม
+        ข้อความที่ต้องประมวลผล:`,
+                summarize: `กรุณาช่วยเรียบเรียงใหม่และเล่าแบบสรุปความของข้อความนิยายจีนเรื่อง \"กระบี่​จง​มา/​剑来/Jian Lai/SwordComing\" ให้ครบถ้วนและละเอียด โดย:
+        1. สรุปเนื้อหาสำคัญทั้งหมดโดยละเอียด
+        2. รักษาลำดับเหตุการณ์และความต่อเนื่อง
+        3. ใช้ภาษาที่เข้าใจง่ายและเหมาะสมกับการอ่านออกเสียง
+        4. แบ่งเป็นประโยคสั้นๆ ที่เหมาะสมกับการอ่าน
+        5. รักษาความเป็นนิยายไว้
+        6. ให้เริ่มเรื่องเลย ไม่ต้องทวนคำถาม
 
-ข้อความที่ต้องสรุป:`,
-                mystyle: `กรุณาช่วยเรียบเรียงใหม่และเล่าแบบสรุปความของข้อความนิยายจีนเรื่อง "กระบี่​จง​มา/​剑来/Jian Lai/SwordComing" ให้ครบถ้วน โดย:
-1. สรุปเนื้อหาสำคัญทั้งหมดแบบสั้นๆ
-2. รักษาลำดับเหตุการณ์และความต่อเนื่อย (who what where how why)
-3. ใช้ภาษาที่เข้าใจง่ายและเหมาะสมกับการอ่านออกเสียง
-4. แบ่งเป็นประโยคสั้นๆ ที่เหมาะสมกับการอ่าน
-5. รักษาความเป็นนิยายไว้
-6. ให้เริ่มเรื่องเลย ไม่ต้องทวนคำถาม
+        ข้อความที่ต้องสรุป:`,
+                mystyle: `กรุณาช่วยเรียบเรียงใหม่และเล่าแบบสรุปความของข้อความนิยายจีนเรื่อง \"กระบี่​จง​มา/​剑来/Jian Lai/SwordComing\" ให้ครบถ้วน โดย:
+        1. สรุปเนื้อหาสำคัญทั้งหมดแบบสั้นๆ
+        2. รักษาลำดับเหตุการณ์และความต่อเนื่อย (who what where how why)
+        3. ใช้ภาษาที่เข้าใจง่ายและเหมาะสมกับการอ่านออกเสียง
+        4. แบ่งเป็นประโยคสั้นๆ ที่เหมาะสมกับการอ่าน
+        5. รักษาความเป็นนิยายไว้
+        6. ให้เริ่มเรื่องเลย ไม่ต้องทวนคำถาม
 
-ข้อความที่ต้องประมวลผล:`
+        ข้อความที่ต้องประมวลผล:`
             };
             
             let prompts = {...defaultPrompts};
@@ -1028,11 +698,11 @@
             function checkApiKey() {
                 const apiKey = apiKeyInput.value.trim();
                 if (apiKey) {
-                    apiStatus.className = 'api-status ok';
+                    apiStatus.className = 'absolute right-3 top-1/2 transform -translate-y-1/2 w-3 h-3 rounded-full bg-green-500';
                     apiKeyInput.classList.add('valid-input');
                     apiKeyInput.classList.remove('invalid-input');
                 } else {
-                    apiStatus.className = 'api-status';
+                    apiStatus.className = 'absolute right-3 top-1/2 transform -translate-y-1/2 w-3 h-3 rounded-full bg-gray-500';
                     apiKeyInput.classList.remove('valid-input');
                     apiKeyInput.classList.remove('invalid-input');
                 }
@@ -1104,10 +774,11 @@
             // อัปเดตปุ่ม Playlist ให้แสดงจำนวนรายการ
             function updatePlaylistButton() {
                 if (playlist.length > 0) {
-                    playlistBtn.textContent = `Playlist [${playlist.length}]`;
+                    playlistBtn.innerHTML = `<i data-feather="list"></i> Playlist [${playlist.length}]`;
                 } else {
-                    playlistBtn.textContent = 'Playlist';
+                    playlistBtn.innerHTML = `<i data-feather="list"></i> Playlist`;
                 }
+                feather.replace();
             }
             
             // อัปเดต textarea ด้วย custom words
@@ -1192,7 +863,7 @@
                 for (const [oldWord, newWord] of sortedWords) {
                     // สร้าง regex ที่ตรวจจับคำทั้งหมด (case-sensitive)
                     // โดยใช้ word boundaries (\b) สำหรับภาษาไทยจะใช้ \s หรือตัวอักษรจีน
-                    const escapedOldWord = oldWord.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                    const escapedOldWord = oldWord.replace(/[.*+?^${}()|[\\]/g, '\\$&');
                     const regex = new RegExp(escapedOldWord, 'g');
                     result = result.replace(regex, newWord);
                 }
@@ -1200,7 +871,7 @@
                 return result;
             }
             
-            function splitTextIntoChunks(text, maxLen = 120) {
+            function splitTextIntoChunks(text, maxLen) { // maxLen will be dynamic
                 if (!text) return [];
 
                 const chunks = [];
@@ -1242,6 +913,7 @@
 
             // ฟังก์ชันสร้าง URL สำหรับ Google Translate TTS
             async function generateTTSUrl(chunk, index, total) {
+                const currentSpeechSpeed = speechSpeed.value; // Get current speech speed
                 if (isLocalProxyAvailable) {
                     try {
                         log(`Attempting to fetch chunk ${index + 1} from local proxy...`);
@@ -1250,7 +922,7 @@
                             headers: {
                                 'Content-Type': 'application/json',
                             },
-                            body: JSON.stringify({ text: chunk }),
+                            body: JSON.stringify({ text: chunk, speed: currentSpeechSpeed }), // Pass speed to proxy
                             signal: AbortSignal.timeout(3000) // 3 second timeout
                         });
                         if (!response.ok) {
@@ -1263,19 +935,31 @@
                         log(`Local proxy failed for chunk ${index + 1}. Falling back to Google TTS.`, error);
                         isLocalProxyAvailable = false; // Mark proxy as unavailable
                         updateStatus('Local proxy ไม่พร้อมใช้งาน, กำลังใช้ Google TTS', 'warning');
+                        setTimeout(() => { updateLiveText() }, 1000);
                         // Fall through to Google TTS
                     }
                 }
                 
                 log(`Using Google TTS for chunk ${index + 1}.`);
-                return `https://translate.google.com/translate_tts?ie=UTF-8&q=${encodeURIComponent(chunk)}&tl=th&client=tw-ob&ttsspeed=1.35&total=${total}&idx=${index}`;
+                return `https://translate.google.com/translate_tts?ie=UTF-8&q=${encodeURIComponent(chunk)}&tl=th&client=tw-ob&ttsspeed=${currentSpeechSpeed}&total=${total}&idx=${index}`;
             }
-            
+
+            // ฟังก์ชันอัปเดตตัวเลขความคืบหน้า
+            function updateProgressText() {
+                const progressText = document.getElementById('progressText');
+                if (audioQueue.length > 0) {
+                    progressText.textContent = `${currentIndex + 1}/${audioQueue.length}`;
+                } else {
+                    progressText.textContent = '0/0';
+                }
+            }    
+
             // ฟังก์ชันอัปเดต progress bar
             function updateProgress() {
                 if (audioQueue.length > 0) {
                     const progress = ((currentIndex) / audioQueue.length) * 100;
                     progressBar.style.width = `${progress}%`;
+                    updateProgressText(); // เรียกฟังก์ชันใหม่
                 }
             }
             
@@ -1283,7 +967,7 @@
             function updateLiveText() {
                 if (chunksForDisplay.length > 0 && currentIndex < chunksForDisplay.length) {
                     statusDiv.textContent = chunksForDisplay[currentIndex];
-                    statusDiv.className = 'status playing';
+                    statusDiv.className = 'text-center py-4 text-gray-300 status playing';
                 } 
             }
 
@@ -1311,7 +995,7 @@
                             if (url) {
                                 const audio = new Audio(url);
                                 audio.preload = 'auto';
-                                audio.playbackRate = 1.35;
+                                audio.playbackRate = speechSpeed.value;
                                 audioBuffer.set(lookaheadIndex, audio);
                                 log(`Chunk ${lookaheadIndex + 1} is now buffered.`);
                                 success = true;
@@ -1338,7 +1022,9 @@
             }
             
             async function playNext() {
+                console.log(`[TTS Debug] playNext called. currentIndex: ${currentIndex}, audioQueue.length: ${audioQueue.length}, isPlaying: ${isPlaying}`);
                 if (currentIndex >= audioQueue.length || !isPlaying) {
+                    console.log(`[TTS Debug] playNext: Condition met for finishing playback. currentIndex: ${currentIndex}, audioQueue.length: ${audioQueue.length}, isPlaying: ${isPlaying}`);
                     if (!isPaused) finishPlayback();
                     return;
                 }
@@ -1364,6 +1050,7 @@
                 }
                 
                 currentAudio = audio;
+                currentAudio.currentTime = 0; // Ensure fresh start for automatically played chunks
                 log(`Playing chunk ${currentIndex + 1}/${audioQueue.length}.`);
 
                 currentAudio.play().catch(error => {
@@ -1397,15 +1084,37 @@
                     stopSpeech();
                 };
             }
-            
+
+            function showProgressThenChunk(index) {
+                // Cancel previous timer if any
+                if (window._chunkPreviewTimer) {
+                    clearTimeout(window._chunkPreviewTimer);
+                    window._chunkPreviewTimer = null;
+                }
+
+                // Show progress line immediately
+                updateStatus(`กำลังอ่านออกเสียง... (${index + 1}/${audioQueue.length})`, 'playing');
+
+                // After 0.5s show the actual chunk text (if available)
+                window._chunkPreviewTimer = setTimeout(() => {
+                    if (chunksForDisplay && chunksForDisplay[index]) {
+                        statusDiv.textContent = chunksForDisplay[index];
+                        statusDiv.className = 'text-center py-4 text-gray-300 status playing';
+                    }
+                    window._chunkPreviewTimer = null;
+                }, 500);
+            }    
+
             // ฟังก์ชันเล่น chunk ถัดไป
-            function playNextChunk() {
+            async function playNextChunk() {
                 if (currentIndex < audioQueue.length - 1) {
                     if (currentAudio) {
                         currentAudio.pause();
                     }
                     currentIndex++;
-                    
+
+                    showProgressThenChunk(currentIndex);            
+
                     // ถ้ากำลังเล่นอยู่ ให้เล่น chunk ใหม่ทันที
                     if (isPlaying && !isPaused) {
                         playChunk(currentIndex);
@@ -1415,61 +1124,166 @@
                         updateLiveText(); // อัปเดต live text
                         updateStatus(`หยุดชั่วคราวที่ chunk ${currentIndex + 1}/${audioQueue.length}`, 'success');
                     }
-                }
-            }
-            
-            // ฟังก์ชันเล่น chunk ก่อนหน้า
-            function playPreviousChunk() {
-                if (currentIndex > 0) {
-                    if (currentAudio) {
-                        currentAudio.pause();
-                    }
-                    currentIndex--;
-                    
-                    // ถ้ากำลังเล่นอยู่ ให้เล่น chunk ใหม่ทันที
-                    if (isPlaying && !isPaused) {
-                        playChunk(currentIndex);
-                    } else {
-                        // ถ้าหยุดชั่วคราว ให้อัปเดตสถานะและ progress bar เท่านั้น
-                        updateProgress();
-                        updateLiveText(); // อัปเดต live text
-                        updateStatus(`หยุดชั่วคราวที่ chunk ${currentIndex + 1}/${audioQueue.length}`, 'success');
+                    if (playlistModal.style.display === 'flex') {
+                        renderPlaylist(); // Update button states in the modal
                     }
                 }
             }
             
+                        // ฟังก์ชันเล่น chunk ก่อนหน้า
+                        async function playPreviousChunk() {
+                            if (currentIndex > 0) {
+                                if (currentAudio) {
+                                    currentAudio.pause();
+                                }
+                                currentIndex--;
+            
+                                showProgressThenChunk(currentIndex);            
+            
+                                // ถ้ากำลังเล่นอยู่ ให้เล่น chunk ใหม่ทันที
+                                if (isPlaying && !isPaused) {
+                                    playChunk(currentIndex);
+                                } else {
+                                    // ถ้าหยุดชั่วคราว ให้อัปเดตสถานะและ progress bar เท่านั้น
+                                    updateProgress();
+                                    updateLiveText(); // อัปเดต live text
+                                    updateStatus(`หยุดชั่วคราวที่ chunk ${currentIndex + 1}/${audioQueue.length}`, 'success');
+                                }
+                                if (playlistModal.style.display === 'flex') {
+                                    renderPlaylist(); // Update button states in the modal
+                                }
+                            }
+                        }            
             // ฟังก์ชันเล่น chunk ที่กำหนด
             function playChunk(index) {
                 if (index >= audioQueue.length) return;
-                
+
                 currentIndex = index;
                 updateProgress();
                 updateLiveText(); // อัปเดต live text
                 updateStatus(`กำลังอ่านออกเสียง... (${currentIndex + 1}/${audioQueue.length})`, 'playing');
-                
-                // ตรวจสอบว่ามี preloaded chunk หรือไม่
-                currentAudio = preloadedChunks[currentIndex];
-                
-                // ถ้าไม่มีให้สร้างใหม่ (fallback)
-                if (!currentAudio) {
-                    console.warn(`Chunk ${currentIndex} not preloaded, creating new audio element`);
-                    currentAudio = new Audio(audioQueue[currentIndex]);
-                    currentAudio.preload = 'auto';
-                    currentAudio.playbackRate = 1.35;
+
+                // เริ่มเติม buffer เพิ่ม
+                fillAudioBuffer();
+
+                // หยุด audio ปัจจุบันก่อน
+                if (currentAudio) {
+                    try {
+                        currentAudio.pause();
+                    } catch (e) { /* ignore */ }
+                    currentAudio.onended = null;
+                    currentAudio = null;
                 }
-                
+
+                // ดึง audio จาก audioBuffer แทน preloadedChunks
+                let audio = audioBuffer.get(currentIndex);
+
+                // ถ้ากำลัง fetch ให้รอจนเสร็จ
+                const waitForFetchAndPlay = async () => {
+                    while (audioBuffer.get(currentIndex) === 'fetching') {
+                        await new Promise(resolve => setTimeout(resolve, 200));
+                    }
+                    audio = audioBuffer.get(currentIndex);
+                    if (!audio || !(audio instanceof Audio)) {
+                        // fallback: สร้าง audio ใหม่จาก URL (generateTTSUrl) แล้วเล่น
+                        try {
+                            const url = await generateTTSUrl(audioQueue[currentIndex], currentIndex, audioQueue.length);
+                            if (!url) {
+                                updateStatus(`ไม่สามารถโหลดเสียงส่วนที่ ${currentIndex + 1} ได้`, 'error');
+                                return;
+                            }
+                            const a = new Audio(url);
+                            a.preload = 'auto';
+                            a.playbackRate = speechSpeed.value;
+                            currentAudio = a;
+                            a.play().catch(err => {
+                                updateStatus('ไม่สามารถอ่านออกเสียงได้', 'error');
+                                console.error(err);
+                            });
+                            attachAudioHandlers(a);
+                        } catch (err) {
+                            updateStatus('ไม่สามารถสร้างเสียงได้', 'error');
+                            console.error(err);
+                        }
+                        return;
+                    }
+
+                    // เล่น audio ที่ได้จาก buffer
+                    currentAudio = audio;
+                    currentAudio.play().catch(error => {
+                        updateStatus('ไม่สามารถอ่านออกเสียงได้', 'error');
+                        console.error(error);
+                    });
+                    attachAudioHandlers(currentAudio);
+                };
+
+                // ถ้า audio ยังเป็นสถานะ fetching ให้รอ
+                if (audio === 'fetching') {
+                    waitForFetchAndPlay();
+                    return;
+                }
+
+                // ถ้าไม่มี audio ใน buffer ให้สร้างและเล่น (fallback)
+                if (!audio || !(audio instanceof Audio)) {
+                    (async () => {
+                        try {
+                            const url = await generateTTSUrl(audioQueue[currentIndex], currentIndex, audioQueue.length);
+                            if (!url) {
+                                updateStatus(`ไม่สามารถโหลดเสียงส่วนที่ ${currentIndex + 1} ได้`, 'error');
+                                return;
+                            }
+                            const a = new Audio(url);
+                            a.preload = 'auto';
+                            a.playbackRate = speechSpeed.value;
+                            currentAudio = a;
+                            await a.play();
+                            attachAudioHandlers(a);
+                        } catch (err) {
+                            updateStatus('ไม่สามารถอ่านออกเสียงได้', 'error');
+                            console.error(err);
+                        }
+                    })();
+                    return;
+                }
+
+                // ถ้ามี audio พร้อมเล่นจาก buffer
+                currentAudio = audio;
+                currentAudio.currentTime = 0; // Reset playback position to start
                 currentAudio.play().catch(error => {
                     updateStatus('ไม่สามารถอ่านออกเสียงได้', 'error');
+                    console.error(error);
                 });
-                
-                currentAudio.onended = function() {
+                attachAudioHandlers(currentAudio);
+            }
+
+            // ช่วยแนบ handler ซ้ำๆ ให้ audio element
+            function attachAudioHandlers(a) {
+                a.onended = function() {
+                    log(`Finished playing chunk ${currentIndex + 1}.`);
+                    
+                    const playedAudio = audioBuffer.get(currentIndex);
+                    if (playedAudio) {
+                        const url = playedAudio.src;
+                        if (url && url.startsWith('blob:')) {
+                            URL.revokeObjectURL(url);
+                            log(`Revoked blob URL for chunk ${currentIndex + 1}.`);
+                        }
+                        audioBuffer.delete(currentIndex);
+                    }
+
                     if (isPlaying && !isPaused) {
                         currentIndex++;
                         playNext();
                     }
                 };
+
+                a.onerror = function(e) {
+                    log(`Audio element error for chunk ${currentIndex + 1}:`, e);
+                    updateStatus('ไม่สามารถอ่านออกเสียงได้', 'error');
+                    stopSpeech();
+                };
             }
-            
+
             // ฟังก์ชันสลับระหว่าง อ่านออกเสียง/หยุดชั่วคราว/เล่นต่อ
             function togglePlayPause() {
                 if (!isPlaying && !isPaused) {
@@ -1487,19 +1301,23 @@
                     if (currentAudio) {
                         currentAudio.pause();
                     }
-                    speakBtn.textContent = 'อ่านต่อ';
+                    speakBtn.innerHTML = `<i data-feather="play"></i> อ่านต่อ`;
                     updateStatus('หยุดชั่วคราว', 'success');
+                    feather.replace();
                 } else if (!isPlaying && isPaused) {
                     // เล่นต่อ
                     isPlaying = true;
                     isPaused = false;
                     if (currentAudio) {
                         currentAudio.play();
-                    } else {
-                        playNext();
                     }
-                    speakBtn.textContent = 'กำลังอ่าน';
-                    updateStatus(`กำลังอ่านออกเสียง... (${currentIndex + 1}/${audioQueue.length})`, 'playing');
+                    speakBtn.innerHTML = `<i data-feather="pause"></i> กำลังอ่าน`;
+                    // แสดงข้อความปัจจุบันทันทีเมื่อเล่นต่อ
+                    if (chunksForDisplay && chunksForDisplay[currentIndex]) {
+                        statusDiv.textContent = chunksForDisplay[currentIndex];
+                        statusDiv.className = 'text-center py-4 text-gray-300 status playing';
+                    }
+                    feather.replace();
                 }
             }
             
@@ -1509,12 +1327,14 @@
                 isPlaying = false;
                 isPaused = false;
                 updateStatus('อ่านเสร็จแล้ว', 'success');
+                document.getElementById('progressText').textContent = `${audioQueue.length}/${audioQueue.length}`;
                 progressBar.style.width = '100%';
                 speakBtn.disabled = false;
                 stopBtn.disabled = true;
                 previousBtn.disabled = true;
                 nextBtn.disabled = true;
-                speakBtn.textContent = 'อ่าน';
+                speakBtn.innerHTML = `<i data-feather="play"></i> อ่าน`;
+                feather.replace();
                 
                 if (currentPlayingIds.length > 0) {
                     log(`Marking ${currentPlayingIds.length} playlist items as played.`);
@@ -1526,6 +1346,8 @@
                     });
                     savePlaylist();
                 }
+                
+
                 
                 // Clean up any remaining blob URLs from the buffer
                 log('Cleaning up audio buffer...');
@@ -1546,11 +1368,26 @@
                     renderPlaylist();
                 }
 
+                // After all cleanup, if there are more items in playAllQueue, start playing the next one
+                console.log(`[TTS Debug] finishPlayback: playAllQueue length before check: ${playAllQueue.length}`);
+                if (playAllQueue.length > 0) {
+                    const nextItemId = playAllQueue.shift(); // Get and remove the first item
+                    const nextItem = playlist.find(item => item.id === nextItemId);
+                    if (nextItem) {
+                        console.log(`[TTS Debug] finishPlayback: Starting next item: ${nextItem.title}`);
+                        speakText(nextItem.text, [nextItem.id], true); // Play the next item
+                    } else {
+                        console.error(`[TTS Debug] finishPlayback: Next item not found for ID: ${nextItemId}`);
+                    }
+                } else {
+                    console.log(`[TTS Debug] finishPlayback: playAllQueue is empty. Sequential playback finished.`);
+                }
+
                 setTimeout(() => {
                     if (!isPlaying) {
                         progressBar.style.width = '0%';
                     }
-                }, 2000);
+                }, 20000);
             }
             
             // ฟังก์ชันแปลข้อความด้วย Google Translate
@@ -1567,20 +1404,25 @@
             }
             
             // ฟังก์ชันอ่านออกเสียง
-            async function speakText(textToSpeak = textInput.value, itemIds = []) {
-                log('speakText called.');
+            async function speakText(textToSpeak = textInput.value, itemIds = [], isSequentialPlay = false) {
+                console.log(`[TTS Debug] speakText called. isSequentialPlay: ${isSequentialPlay}`);
                 const text = textToSpeak.trim();
                 if (!text) {
-                    log('speakText failed: Text input is empty.');
+                    console.warn('[TTS Debug] speakText failed: Text input is empty.');
                     return updateStatus('กรุณาป้อนข้อความ', 'error');
                 }
 
                 try {
-                    stopSpeech(); // Clear previous state
+                    if (!isSequentialPlay) { // Only stop speech if not part of a sequential play
+                        console.log('[TTS Debug] speakText: Calling stopSpeech (not sequential play).');
+                        stopSpeech(); // Clear previous state
+                    } else {
+                        console.log('[TTS Debug] speakText: Skipping stopSpeech (sequential play).');
+                    }
                     updateStatus('กำลังประมวลผล...', 'playing');
-                    log('Processing text...');
+                    console.log('[TTS Debug] speakText: Processing text...');
 
-                    const chunks = splitTextIntoChunks(text);
+                    const chunks = splitTextIntoChunks(text, parseInt(chunkSize.value)); // Use dynamic chunkSize
                     if (!chunks.length) {
                         log('speakText failed: No chunks created from text.');
                         return updateStatus('ไม่มีข้อความให้อ่าน', 'error');
@@ -1611,13 +1453,15 @@
                     stopBtn.disabled = false;
                     previousBtn.disabled = false;
                     nextBtn.disabled = false;
-                    speakBtn.textContent = 'กำลังอ่าน';
+                    speakBtn.innerHTML = `<i data-feather="pause"></i> กำลังอ่าน`;
+                    feather.replace();
                     
                     if (playlistModal.style.display === 'flex') {
                         renderPlaylist();
                     }
 
-                    log('Kicking off playback and buffering...');
+                    console.log('[TTS Debug] speakText: Kicking off playback and buffering...');
+                    console.log(`[TTS Debug] speakText: Calling playNext. isPlaying: ${isPlaying}`);
                     fillAudioBuffer(); // Start filling the buffer
                     playNext(); // Start the playback loop
 
@@ -1630,9 +1474,14 @@
             
             // ฟังก์ชันหยุดเสียง
             function stopSpeech() {
-                log('stopSpeech called. Halting all playback and cleaning up.');
+                console.log('[TTS Debug] stopSpeech called. Halting all playback and cleaning up.');
                 isPlaying = false;
                 isPaused = false;
+
+                if (window._chunkPreviewTimer) {
+                    clearTimeout(window._chunkPreviewTimer);
+                    window._chunkPreviewTimer = null;
+                }        
                 
                 if (currentAudio) {
                     currentAudio.pause();
@@ -1658,24 +1507,49 @@
                 chunksForDisplay = [];
                 currentPlayingIds = [];
                 currentPlayingItemId = null;
+                playAllQueue = []; // Clear playAllQueue when stopping speech
+                console.log('[TTS Debug] stopSpeech: playAllQueue cleared.');
                 
                 updateStatus('หยุดแล้ว', 'success');
                 speakBtn.disabled = false;
                 stopBtn.disabled = true;
                 previousBtn.disabled = true;
                 nextBtn.disabled = true;
-                speakBtn.textContent = 'อ่าน';
+                speakBtn.innerHTML = `<i data-feather="play"></i> อ่าน`;
+                feather.replace();
                 progressBar.style.width = '0%';
 
                 if (playlistModal.style.display === 'flex') {
                     renderPlaylist();
                 }
+
+                setTimeout(() => {
+                    if (!isPlaying) {
+                        progressBar.style.width = '0%';
+                    }
+                }, 2000);
+
+                // After all cleanup, if there are more items in playAllQueue, start playing the next one
+                console.log(`[TTS Debug] finishPlayback: playAllQueue length before check: ${playAllQueue.length}`);
+                if (playAllQueue.length > 0) {
+                    const nextItemId = playAllQueue.shift(); // Get and remove the first item
+                    const nextItem = playlist.find(item => item.id === nextItemId);
+                    if (nextItem) {
+                        console.log(`[TTS Debug] finishPlayback: Starting next item: ${nextItem.title}`);
+                        speakText(nextItem.text, [nextItem.id], true); // Play the next item
+                    } else {
+                        console.error(`[TTS Debug] finishPlayback: Next item not found for ID: ${nextItemId}`);
+                    }
+                } else {
+                    console.log(`[TTS Debug] finishPlayback: playAllQueue is empty. Sequential playback finished.`);
+                }
             }
             
             // ฟังก์ชันล้างข้อความ
-            function clearText() {
+            async function clearText() {
                 textInput.value = '';
                 updateStatus('ป้อนข้อความเพื่อเริ่มต้น', '');
+                updateProgressText();
             }
             
             // ฟังก์ชันวางข้อความจากคลิปบอร์ด
@@ -1684,25 +1558,40 @@
                     const text = await navigator.clipboard.readText();
                     textInput.value = text;
                     updateStatus('วางข้อความจากคลิปบอร์ดแล้ว', 'success');
+                    updateProgressText();
                 } catch (err) {
                     updateStatus('ไม่สามารถวางข้อความได้', 'error');
                 }
             }
-            
+
+            let statusTimeout; // Declare a variable to hold the timeout ID
+
             // ฟังก์ชันอัปเดตสถานะ
             function updateStatus(message, type) {
+                clearTimeout(statusTimeout); // Clear any previous timeout
+
+                // แทนที่คำในข้อความก่อนการอัปเดตสถานะ
+                message = replaceCustomWords(message);
+                
                 statusDiv.textContent = message;
-                statusDiv.className = 'status ' + type;
+                statusDiv.className = 'text-center py-4 text-gray-300 status ' + type;
+
+                // If playing, revert to current chunk after 0.5 seconds
+                if (isPlaying) {
+                    statusTimeout = setTimeout(() => {
+                        updateLiveText();
+                    }, 500);
+                }
             }
-            
+
             // ฟังก์ชันทดสอบเสียง
             function previewSpeech() {
                 const previewStatus = document.getElementById('previewStatus');
                 const text = previewText.value.trim();
-                
+
                 if (!text) {
                     previewStatus.textContent = 'กรุณาป้อนข้อความ';
-                    previewStatus.className = 'status error';
+                    previewStatus.className = 'mt-3 text-center py-2 text-gray-300 status error';
                     return;
                 }
                 
@@ -1715,7 +1604,7 @@
 
                         if (!url) {
                             previewStatus.textContent = 'ไม่สามารถสร้างเสียงตัวอย่างได้';
-                            previewStatus.className = 'status error';
+                            previewStatus.className = 'mt-3 text-center py-2 text-gray-300 status error';
                             return;
                         }
                         
@@ -1724,20 +1613,20 @@
                         }
                         
                         previewAudio = new Audio(url);
-                        previewAudio.playbackRate = 1.35;
+                        previewAudio.playbackRate = speechSpeed.value;
 
                         // 1. Attach event handlers FIRST
                         previewAudio.onended = function() {
                             log('Preview audio finished.');
                             previewStatus.textContent = 'เล่นเสียงเสร็จแล้ว';
-                            previewStatus.className = 'status success';
+                            previewStatus.className = 'mt-3 text-center py-2 text-gray-300 status success';
                             previewBtn.disabled = false;
                         };
 
                         previewAudio.onerror = function() {
                             log('Preview audio error.');
                             previewStatus.textContent = 'ไม่สามารถเล่นเสียงได้';
-                            previewStatus.className = 'status error';
+                            previewStatus.className = 'mt-3 text-center py-2 text-gray-300 status error';
                             previewBtn.disabled = false;
                         };
 
@@ -1746,20 +1635,20 @@
                             await previewAudio.play();
                             log('Preview audio started.');
                             previewStatus.textContent = 'กำลังเล่นเสียง...';
-                            previewStatus.className = 'status playing';
+                            previewStatus.className = 'mt-3 text-center py-2 text-gray-300 status playing';
                             previewBtn.disabled = true;
                         } catch (error) {
                             log('previewAudio.play() was rejected.', error);
                             // The onerror handler will likely catch this, but just in case:
                             previewStatus.textContent = 'ไม่สามารถเล่นเสียงได้';
-                            previewStatus.className = 'status error';
+                            previewStatus.className = 'mt-3 text-center py-2 text-gray-300 status error';
                             previewBtn.disabled = false;
                         }
                     });
                 } catch (error) {
                     log('Error in previewSpeech:', error);
                     previewStatus.textContent = 'เกิดข้อผิดพลาด: ' + error.message;
-                    previewStatus.className = 'status error';
+                    previewStatus.className = 'mt-3 text-center py-2 text-gray-300 status error';
                 }
             }
             
@@ -1833,10 +1722,12 @@
             
             // เล่นจาก playlist
             function playFromPlaylist(id) {
-                // If this item is already playing, stop it. Otherwise, play it.
-                if (isPlaying && currentPlayingItemId === id) {
-                    stopSpeech();
+                if (currentPlayingItemId === id) {
+                    // If the clicked item is the one currently playing or paused
+                    togglePlayPause(); // This will handle pause/resume
                 } else {
+                    // If a different item is clicked, stop current and play new one
+                    stopSpeech(); // Stop any existing playback
                     const item = playlist.find(item => item.id === id);
                     if (item) {
                         speakText(item.text, [id]);
@@ -1852,16 +1743,23 @@
                     return;
                 }
                 
-                // สร้างข้อความรวมจากทุกรายการที่ยังไม่ได้เล่น
-                const combinedText = unplayedItems.map(item => item.text).join('\n\n');
-                const itemIds = unplayedItems.map(item => item.id);
-                speakText(combinedText, itemIds);
+                // Clear any existing playAllQueue
+                playAllQueue = [];
+                // Populate playAllQueue with IDs of unplayed items
+                unplayedItems.forEach(item => playAllQueue.push(item.id));
+
+                // Start playing the first item from the queue
+                const firstItemId = playAllQueue.shift(); // Get and remove the first item
+                const firstItem = playlist.find(item => item.id === firstItemId);
+                if (firstItem) {
+                    speakText(firstItem.text, [firstItem.id], true); // Pass true for isSequentialPlay
+                }
             }
             
             // แสดง playlist
             function renderPlaylist() {
                 if (playlist.length === 0) {
-                    playlistItems.innerHTML = '<div class="empty-playlist">ไม่มีรายการใน Playlist</div>';
+                    playlistItems.innerHTML = '<div class="text-center py-8 text-gray-400">ไม่มีรายการใน Playlist</div>';
                     playAllBtn.disabled = true;
                     clearAllBtn.disabled = true;
                     return;
@@ -1872,30 +1770,49 @@
                 clearAllBtn.disabled = false;
 
                 playlistItems.innerHTML = '';
+                // Temporary debug: Display currentIndex in statusDiv if modal is open
+                // if (playlistModal.style.display === 'flex') {
+                //     updateStatus(`Debug: currentIndex = ${currentIndex}, audioQueue.length = ${audioQueue.length}`, 'warning');
+                // }
 
                 playlist.forEach((item, index) => {
                     const playlistItem = document.createElement('div');
-                    playlistItem.className = `playlist-item ${item.played ? 'played' : ''}`;
+                    playlistItem.className = `playlist-item bg-gray-700 rounded-lg p-4 ${item.played ? 'played opacity-70' : ''}`;
                     
-                    const isCurrentlyPlaying = isPlaying && item.id === currentPlayingItemId;
+                    const isCurrentlyActive = (isPlaying || isPaused) && item.id === currentPlayingItemId;
 
                     let actionsHTML = '';
-                    if (isCurrentlyPlaying) {
-                        actionsHTML += `<button class="playlist-toggle-btn delete-btn" data-id="${item.id}">หยุด</button>`;
+                    if (isCurrentlyActive) {
+                        if (isPlaying) {
+                            actionsHTML += `<button class="playlist-toggle-btn bg-red-600 hover:bg-red-700 text-white py-1 px-3 rounded text-sm flex items-center gap-1" data-id="${item.id}"><i data-feather="pause"></i></button>`;
+                        } else if (isPaused) {
+                            actionsHTML += `<button class="playlist-toggle-btn bg-green-600 hover:bg-green-700 text-white py-1 px-3 rounded text-sm flex items-center gap-1" data-id="${item.id}"><i data-feather="play"></i></button>`;
+                        }
+                        // Add chunk navigation buttons
+                        actionsHTML += `<button class="playlist-chunk-prev-btn bg-gray-700 hover:bg-gray-600 text-white py-1 px-3 rounded text-sm flex items-center gap-1" data-id="${item.id}" ${currentIndex <= 0 ? 'disabled' : ''}><i data-feather="skip-back"></i></button>`;
+                        actionsHTML += `<button class="playlist-chunk-next-btn bg-gray-700 hover:bg-gray-600 text-white py-1 px-3 rounded text-sm flex items-center gap-1" data-id="${item.id}" ${currentIndex >= audioQueue.length - 1 ? 'disabled' : ''}><i data-feather="skip-forward"></i></button>`;
+                        actionsHTML += `<button class="playlist-cancel-btn bg-gray-600 hover:bg-gray-500 text-white py-1 px-3 rounded text-sm flex items-center gap-1" data-id="${item.id}"><i data-feather="x-circle"></i></button>`;
                     } else {
-                        actionsHTML += `<button class="playlist-toggle-btn play-btn" data-id="${item.id}">เล่น</button>`;
+                        actionsHTML += `<button class="playlist-toggle-btn bg-green-600 hover:bg-green-700 text-white py-1 px-3 rounded text-sm flex items-center gap-1" data-id="${item.id}"><i data-feather="play"></i></button>`;
                     }
 
                     if (item.played) {
-                        actionsHTML += `<button class="unread-btn" data-id="${item.id}">Unread</button>`;
+                        actionsHTML += `<button class="unread-btn bg-yellow-600 hover:bg-yellow-700 text-white py-1 px-3 rounded text-sm flex items-center gap-1" data-id="${item.id}"><i data-feather="book-open"></i></button>`;
                     }
-                    actionsHTML += `<button class="delete-btn" data-id="${item.id}">ลบ</button>`;
+                    actionsHTML += `<button class="delete-btn bg-red-600 hover:bg-red-700 text-white py-1 px-3 rounded text-sm flex items-center gap-1" data-id="${item.id}"><i data-feather="trash-2"></i></button>`;
 
                     playlistItem.innerHTML = `
-                        <div class="playlist-number">${index + 1}.</div>
-                        <div class="playlist-title" title="${item.title}">${item.title}</div>
-                        <div class="playlist-actions">
-                            ${actionsHTML}
+                        <div class="flex flex-col md:flex-row md:items-center gap-3">
+                            <div class="flex items-center gap-3 flex-1">
+                                <span class="font-bold text-primary-400">${index + 1}.</span>
+                                <div class="flex-1">
+                                    <div class="playlist-title font-medium ${item.played ? 'line-through' : ''}" title="${item.title}">${item.title}</div>
+                                    <div class="text-xs text-gray-400 mt-1">${item.createdAt}</div>
+                                </div>
+                            </div>
+                            <div class="flex flex-wrap gap-2">
+                                ${actionsHTML}
+                            </div>
                         </div>
                     `;
                     playlistItems.appendChild(playlistItem);
@@ -1903,26 +1820,46 @@
 
                 document.querySelectorAll('.playlist-toggle-btn').forEach(btn => {
                     btn.addEventListener('click', (e) => {
-                        const id = parseInt(e.target.dataset.id);
+                        const id = parseInt(e.currentTarget.dataset.id); // Use currentTarget
                         playFromPlaylist(id);
                     });
                 });
 
                 document.querySelectorAll('.unread-btn').forEach(btn => {
                     btn.addEventListener('click', (e) => {
-                        const id = parseInt(e.target.dataset.id);
+                        const id = parseInt(e.currentTarget.dataset.id); // Use currentTarget
                         markAsUnread(id);
+                    });
+                });
+
+                document.querySelectorAll('.playlist-chunk-prev-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        // These buttons don't need an ID from the button itself, they call global functions
+                        playPreviousChunk();
+                    });
+                });
+
+                document.querySelectorAll('.playlist-chunk-next-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        // These buttons don't need an ID from the button itself, they call global functions
+                        playNextChunk();
+                    });
+                });
+
+                document.querySelectorAll('.playlist-cancel-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        // This button doesn't need an ID from the button itself, it calls a global function
+                        stopSpeech();
                     });
                 });
 
                 document.querySelectorAll('.delete-btn').forEach(btn => {
                     btn.addEventListener('click', (e) => {
-                        const id = parseInt(e.target.dataset.id);
-                        // Prevent delete from triggering the toggle play button
-                        if (e.target.classList.contains('playlist-toggle-btn')) return;
+                        const id = parseInt(e.currentTarget.dataset.id); // Use currentTarget
                         removeFromPlaylist(id);
                     });
                 });
+                feather.replace(); // Re-render icons after updating playlist
             }
 
             // โหลดรายการโมเดล
@@ -2022,8 +1959,9 @@
                 
                 // Disable all AI buttons and show processing status
                 disableAIButtons();
-                aiEditBtn.textContent = 'กำลังประมวลผล...';
+                aiEditBtn.innerHTML = `<i data-feather="loader"></i> กำลังประมวลผล...`;
                 updateStatus('AI กำลังประมวลผล...', 'playing');
+                feather.replace();
                 
                 try {
                     const fullPrompt = prompts.edit + '\n' + text;
@@ -2058,8 +1996,9 @@
                     updateStatus(`AI Processing error: ${error.message}`, 'error');
                 } finally {
                     aiEditBtn.disabled = false;
-                    aiEditBtn.textContent = 'AI จัดคำ';
+                    aiEditBtn.innerHTML = `<i data-feather="edit"></i> AI จัดคำ`;
                     enableAIButtons();
+                    feather.replace();
                 }
             }
 
@@ -2080,8 +2019,9 @@
                 
                 // Disable all AI buttons and show processing status
                 disableAIButtons();
-                aiSummarizeBtn.textContent = 'กำลังสรุป...';
+                aiSummarizeBtn.innerHTML = `<i data-feather="loader"></i> กำลังสรุป...`;
                 updateStatus('AI กำลังประมวลผล...', 'playing');
+                feather.replace();
                 
                 try {
                     const fullPrompt = prompts.summarize + '\n' + text;
@@ -2116,8 +2056,9 @@
                     updateStatus(`AI Summarize error: ${error.message}`, 'error');
                 } finally {
                     aiSummarizeBtn.disabled = false;
-                    aiSummarizeBtn.textContent = 'AI สรุป';
+                    aiSummarizeBtn.innerHTML = `<i data-feather="file-text"></i> AI สรุป`;
                     enableAIButtons();
+                    feather.replace();
                 }
             }
 
@@ -2138,8 +2079,9 @@
                 
                 // Disable all AI buttons and show processing status
                 disableAIButtons();
-                aiMyStyleBtn.textContent = 'กำลังประมวลผล...';
+                aiMyStyleBtn.innerHTML = `<i data-feather="loader"></i> กำลังประมวลผล...`;
                 updateStatus('AI กำลังประมวลผล...', 'playing');
+                feather.replace();
                 
                 try {
                     const fullPrompt = prompts.mystyle + '\n' + text;
@@ -2174,8 +2116,9 @@
                     updateStatus(`AI My Style error: ${error.message}`, 'error');
                 } finally {
                     aiMyStyleBtn.disabled = false;
-                    aiMyStyleBtn.textContent = 'สั้น';
+                    aiMyStyleBtn.innerHTML = `<i data-feather="type"></i> สั้น`;
                     enableAIButtons();
+                    feather.replace();
                 }
             }
 
@@ -2189,40 +2132,75 @@
             addToPlaylistMainBtn.addEventListener('click', addToPlaylist);
 
             wordBtn.addEventListener('click', function () {
+                wordModal.classList.remove('hidden');
                 wordModal.style.display = 'flex';
             });
 
             playlistBtn.addEventListener('click', function () {
+                playlistModal.classList.remove('hidden');
                 playlistModal.style.display = 'flex';
                 renderPlaylist();
             });
 
             promptBtn.addEventListener('click', function () {
+                promptModal.classList.remove('hidden');
                 promptModal.style.display = 'flex';
             });
 
-            closeButtons.forEach(button => {
-                button.addEventListener('click', function () {
-                    wordModal.style.display = 'none';
-                    playlistModal.style.display = 'none';
-                    promptModal.style.display = 'none';
-                });
+            // Settings modal event listeners
+            settingBtn.addEventListener('click', () => {
+                settingsModal.classList.remove('hidden');
+                settingsModal.style.display = 'flex';
+                loadSettings(); // Load settings when modal opens
+            });
+
+            closeSettingsModal.addEventListener('click', () => {
+                settingsModal.style.display = 'none';
+                settingsModal.classList.add('hidden');
+            });
+
+            settingsModal.addEventListener('click', (e) => {
+                if (e.target === settingsModal) {
+                    settingsModal.style.display = 'none';
+                    settingsModal.classList.add('hidden');
+                }
+            });
+
+            closeWordModal.addEventListener('click', function () {
+                wordModal.style.display = 'none';
+                wordModal.classList.add('hidden');
+            });
+
+            closePlaylistModal.addEventListener('click', function () {
+                playlistModal.style.display = 'none';
+                playlistModal.classList.add('hidden');
+            });
+
+            closePromptModal.addEventListener('click', function () {
+                promptModal.style.display = 'none';
+                promptModal.classList.add('hidden');
             });
 
             window.addEventListener('click', function (event) {
                 if (event.target === wordModal) {
                     wordModal.style.display = 'none';
+                    wordModal.classList.add('hidden');
                 }
                 if (event.target === playlistModal) {
                     playlistModal.style.display = 'none';
+                    playlistModal.classList.add('hidden');
                 }
                 if (event.target === promptModal) {
                     promptModal.style.display = 'none';
+                    promptModal.classList.add('hidden');
                 }
             });
 
             saveWordsBtn.addEventListener('click', saveCustomWords);
-            importBtn.addEventListener('click', importFromFile);
+            importBtn.addEventListener('click', function() {
+                importFileInput.click();
+            });
+            importFileInput.addEventListener('change', importFromFile);
             previewBtn.addEventListener('click', previewSpeech);
             playAllBtn.addEventListener('click', playAllUnplayed);
             clearAllBtn.addEventListener('click', clearAllPlaylist);
@@ -2239,7 +2217,7 @@
             apiKeyInput.addEventListener('input', checkApiKey);
             apiKeyInput.addEventListener('blur', saveApiKey);
 
-            // อัปเดตสถานะเมื่อมีการเปลี่ยนแปลงข้อความ
+            // Update status on text input change
             textInput.addEventListener('input', function () {
                 if (textInput.value.trim()) {
                     updateStatus('พร้อมอ่านออกเสียง', 'success');
@@ -2251,11 +2229,61 @@
             previewText.addEventListener('input', function () {
                 if (previewText.value.trim()) {
                     previewStatus.textContent = 'พร้อมทดสอบเสียง';
-                    previewStatus.className = 'status success';
+                    previewStatus.className = 'mt-3 text-center py-2 text-gray-300 status success';
                 } else {
                     previewStatus.textContent = 'ป้อนข้อความเพื่อทดสอบ';
-                    previewStatus.className = 'status';
+                    previewStatus.className = 'mt-3 text-center py-2 text-gray-300 status';
                 }
+            });
+
+            // Initial load of settings (in case modal is not opened immediately)
+            const loadSettings = () => {
+                const savedSettings = JSON.parse(localStorage.getItem('readToSleepSettings'));
+                if (savedSettings) {
+                    speechSpeed.value = savedSettings.speechSpeed;
+                    speechSpeedValue.textContent = `${savedSettings.speechSpeed}×`;
+                    chunkSize.value = savedSettings.chunkSize;
+                } else {
+                    // Apply default settings if nothing is saved
+                    speechSpeed.value = defaultSettings.speechSpeed;
+                    speechSpeedValue.textContent = `${defaultSettings.speechSpeed}×`;
+                    chunkSize.value = defaultSettings.chunkSize;
+                }
+            };
+
+            // Default settings
+            const defaultSettings = {
+                speechSpeed: 1.35,
+                chunkSize: 120
+            };
+
+            // Update speech speed value display and real-time playback rate
+            speechSpeed.addEventListener('input', () => {
+                speechSpeedValue.textContent = `${speechSpeed.value}×`;
+                if (currentAudio) {
+                    currentAudio.playbackRate = parseFloat(speechSpeed.value);
+                }
+            });
+
+            // Save settings to localStorage
+            saveSettingsBtn.addEventListener('click', () => {
+                const settings = {
+                    speechSpeed: parseFloat(speechSpeed.value),
+                    chunkSize: parseInt(chunkSize.value)
+                };
+                localStorage.setItem('readToSleepSettings', JSON.stringify(settings));
+                updateStatus('บันทึก Setting เรียบร้อยแล้ว', 'success');
+                settingsModal.style.display = 'none';
+                settingsModal.classList.add('hidden');
+            });
+
+            // Reset settings to default
+            resetSettingsBtn.addEventListener('click', () => {
+                speechSpeed.value = defaultSettings.speechSpeed;
+                speechSpeedValue.textContent = `${defaultSettings.speechSpeed}×`;
+                chunkSize.value = defaultSettings.chunkSize;
+                localStorage.removeItem('readToSleepSettings'); // Clear saved settings
+                updateStatus('ตั้งค่า Setting เป็นค่าเริ่มต้นแล้ว', 'success');
             });
 
             // โหลดข้อมูลเริ่มต้น
@@ -2264,9 +2292,13 @@
             loadPrompts();
             loadModels();
             loadApiKey();
+            loadSettings(); // Call loadSettings here to apply initial settings
             updateStatus('ป้อนข้อความเพื่อเริ่มต้น', '');
 
         });
-    </script> 
-</body> 
+    </script>
+    <script>
+        feather.replace();
+    </script>
+</body>
 </html>
